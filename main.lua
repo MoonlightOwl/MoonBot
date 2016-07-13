@@ -1,10 +1,12 @@
 local insert
 insert = table.insert
-local graphics, physics, window
+local event, graphics, physics, window
 do
   local _obj_0 = love
-  graphics, physics, window = _obj_0.graphics, _obj_0.physics, _obj_0.window
+  event, graphics, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.physics, _obj_0.window
 end
+local Blur
+Blur = require('shader').Blur
 local START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
 local View
 do
@@ -157,11 +159,14 @@ love.load = function()
   }
   back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
   splash = {
-    go = Splash("CONTAMINATED", {
+    go = Splash("ENTER", {
       255,
-      71,
+      215,
       71
     }, tex.splash, font.splash)
+  }
+  shader = {
+    blur = Blur()
   }
   physics.setMeter(64)
   world = physics.newWorld(0, 0, true)
@@ -183,8 +188,11 @@ end
 love.keypressed = function(key, scancode, isrepeat)
   local _exp_0 = state.stage
   if START == _exp_0 then
-    if key == "return" then
+    local _exp_1 = key
+    if "return" == _exp_1 then
       return setStage(state, GAME)
+    elseif "escape" == _exp_1 then
+      return event.quit()
     end
   elseif GAME == _exp_0 then
     if key == "escape" then
@@ -192,12 +200,20 @@ love.keypressed = function(key, scancode, isrepeat)
     end
   end
 end
-love.draw = function()
-  graphics.setColor(255, 255, 255)
-  graphics.draw(tex.back, back, 0, 0)
+local renderWorld
+renderWorld = function()
   graphics.draw(tex.moon, objects.moon.body:getX(), objects.moon.body:getY(), objects.moon.body:getAngle(), 1, 1, RADIUS, RADIUS)
   for k, v in pairs(objects.garbage) do
     v:draw()
+  end
+end
+love.draw = function()
+  graphics.setColor(255, 255, 255)
+  graphics.draw(tex.back, back, 0, 0)
+  if state.stage == START then
+    shader.blur:draw(renderWorld)
+  else
+    renderWorld()
   end
   graphics.setColor(255, 255, 255)
   graphics.setFont(font.basic)

@@ -1,12 +1,13 @@
 -- 
--- [ Jam! ]
+-- [ MoonBot ]
 -- MoonJam contest project
 -- 2016 (c) Totoro (aka MoonlightOwl)
 -- computercraft.ru
 --
 
 import insert from table
-import graphics, physics, window from love
+import event, graphics, physics, window from love
+import Blur from require('shader')
 
 START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
 
@@ -106,7 +107,11 @@ love.load = ->
   export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
 
   export splash = {
-    go: Splash "CONTAMINATED", { 255, 71, 71 }, tex.splash, font.splash
+    go: Splash "ENTER", { 255, 215, 71 }, tex.splash, font.splash
+  }
+
+  export shader = {
+    blur: Blur!
   }
 
   -- Init physics
@@ -139,20 +144,18 @@ love.update = (dt) ->
 love.keypressed = (key, scancode, isrepeat) ->
   switch state.stage
     when START
-      if key == "return"
-        setStage state, GAME
+      switch key
+        when "return"
+          setStage state, GAME
+        when "escape"
+          event.quit!
     when GAME
       if key == "escape"
         setStage state, START
 
 
 
-
-love.draw = ->
-  -- Background
-  graphics.setColor 255, 255, 255
-  graphics.draw tex.back, back, 0, 0
-
+renderWorld = ->
   -- Moon
   graphics.draw tex.moon, objects.moon.body\getX!, objects.moon.body\getY!, 
     objects.moon.body\getAngle!, 1, 1, RADIUS, RADIUS
@@ -160,6 +163,15 @@ love.draw = ->
   -- Garbage
   for k, v in pairs objects.garbage
     v\draw!
+
+love.draw = ->
+  -- Background
+  graphics.setColor 255, 255, 255
+  graphics.draw tex.back, back, 0, 0
+
+  if state.stage == START
+    shader.blur\draw renderWorld
+  else renderWorld!
 
   -- UI
   graphics.setColor 255, 255, 255
