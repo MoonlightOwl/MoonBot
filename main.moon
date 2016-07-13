@@ -9,6 +9,7 @@ import insert from table
 import event, graphics, physics, window from love
 import Blur from require('shader')
 
+VERSION = 0.1
 START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
 
 
@@ -90,9 +91,10 @@ love.load = ->
 
   export WIDTH, HEIGTH = window.getMode!
   export RADIUS = 100 -- size of the moon
-  export GRAVITY = 5  -- moon gravity
+  export GRAVITY = 50  -- moon gravity
 
   math.randomseed os.time!
+  window.setTitle "MoonBot!  #{VERSION}"
 
   -- Load graphics
   export tex = {

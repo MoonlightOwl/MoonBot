@@ -7,6 +7,7 @@ do
 end
 local Blur
 Blur = require('shader').Blur
+local VERSION = 0.1
 local START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
 local View
 do
@@ -147,8 +148,9 @@ love.load = function()
   state = { }
   WIDTH, HEIGTH = window.getMode()
   RADIUS = 100
-  GRAVITY = 5
+  GRAVITY = 50
   math.randomseed(os.time())
+  window.setTitle("MoonBot!  " .. tostring(VERSION))
   tex = {
     back = graphics.newImage('images/back.png'),
     moon = graphics.newImage('images/moon.png'),
