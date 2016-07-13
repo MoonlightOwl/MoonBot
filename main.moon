@@ -61,7 +61,8 @@ class Garbage
     @body = physics.newBody world, x, y, "dynamic"
     @body\setAngle angle
     @shape = physics.newRectangleShape 0, 0, @width, @height
-    @fixture = physics.newFixture @body, @shape, 1
+    @fixture = physics.newFixture @body, @shape, 2
+    @fixture\setFriction 0.4
 
   draw: =>
     graphics.draw @texture, @body\getX!, @body\getY!, 
@@ -89,6 +90,9 @@ love.load = ->
 
   export WIDTH, HEIGTH = window.getMode!
   export RADIUS = 100 -- size of the moon
+  export GRAVITY = 5  -- moon gravity
+
+  math.randomseed os.time!
 
   -- Load graphics
   export tex = {
@@ -124,6 +128,7 @@ love.load = ->
   objects.moon.body = physics.newBody world, WIDTH/2, HEIGTH/2
   objects.moon.shape = physics.newCircleShape RADIUS
   objects.moon.fixture = physics.newFixture objects.moon.body, objects.moon.shape
+  objects.moon.fixture\setFriction 0.7
  
   objects.garbage = {}
 
@@ -137,7 +142,17 @@ love.load = ->
 
 love.update = (dt) ->
   if state.stage == GAME
+    -- Update physics
     world\update dt
+
+    -- Gravitate to the Moon
+    mx, my = objects.moon.body\getPosition!
+    for object in *objects.garbage
+      x, y = object.body\getPosition!
+      dx, dy = mx - x, my - y
+      len = math.sqrt dx * dx + dy * dy
+      fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
+      object.body\applyForce fx, fy
 
 
 
@@ -152,6 +167,12 @@ love.keypressed = (key, scancode, isrepeat) ->
     when GAME
       if key == "escape"
         setStage state, START
+
+
+
+love.mousepressed = (x, y, button, istouch) ->
+  if button == 1
+    insert objects.garbage, Garbage world, x, y, tex.box, math.random(0, math.pi * 2)
 
 
 

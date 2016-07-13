@@ -115,7 +115,8 @@ do
       self.body = physics.newBody(world, x, y, "dynamic")
       self.body:setAngle(angle)
       self.shape = physics.newRectangleShape(0, 0, self.width, self.height)
-      self.fixture = physics.newFixture(self.body, self.shape, 1)
+      self.fixture = physics.newFixture(self.body, self.shape, 2)
+      return self.fixture:setFriction(0.4)
     end,
     __base = _base_0,
     __name = "Garbage"
@@ -146,6 +147,8 @@ love.load = function()
   state = { }
   WIDTH, HEIGTH = window.getMode()
   RADIUS = 100
+  GRAVITY = 5
+  math.randomseed(os.time())
   tex = {
     back = graphics.newImage('images/back.png'),
     moon = graphics.newImage('images/moon.png'),
@@ -175,6 +178,7 @@ love.load = function()
   objects.moon.body = physics.newBody(world, WIDTH / 2, HEIGTH / 2)
   objects.moon.shape = physics.newCircleShape(RADIUS)
   objects.moon.fixture = physics.newFixture(objects.moon.body, objects.moon.shape)
+  objects.moon.fixture:setFriction(0.7)
   objects.garbage = { }
   insert(objects.garbage, Garbage(world, 200, 200, tex.box, 10))
   insert(objects.garbage, Garbage(world, 120, 120, tex.box, 45))
@@ -182,7 +186,17 @@ love.load = function()
 end
 love.update = function(dt)
   if state.stage == GAME then
-    return world:update(dt)
+    world:update(dt)
+    local mx, my = objects.moon.body:getPosition()
+    local _list_0 = objects.garbage
+    for _index_0 = 1, #_list_0 do
+      local object = _list_0[_index_0]
+      local x, y = object.body:getPosition()
+      local dx, dy = mx - x, my - y
+      local len = math.sqrt(dx * dx + dy * dy)
+      local fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
+      object.body:applyForce(fx, fy)
+    end
   end
 end
 love.keypressed = function(key, scancode, isrepeat)
@@ -198,6 +212,11 @@ love.keypressed = function(key, scancode, isrepeat)
     if key == "escape" then
       return setStage(state, START)
     end
+  end
+end
+love.mousepressed = function(x, y, button, istouch)
+  if button == 1 then
+    return insert(objects.garbage, Garbage(world, x, y, tex.box, math.random(0, math.pi * 2)))
   end
 end
 local renderWorld
