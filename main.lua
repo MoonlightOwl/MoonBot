@@ -5,9 +5,12 @@ do
   local _obj_0 = love
   event, graphics, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.physics, _obj_0.window
 end
+local min
+min = math.min
 local Blur
 Blur = require('shader').Blur
 local VERSION = 0.1
+local DIFFICULTY = 5
 local START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
 local View
 do
@@ -199,6 +202,7 @@ love.update = function(dt)
       local fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
       object.body:applyForce(fx, fy)
     end
+    state.contam = #objects.moon.body:getContactList() * DIFFICULTY
   end
 end
 love.keypressed = function(key, scancode, isrepeat)
@@ -239,6 +243,8 @@ love.draw = function()
   graphics.setColor(255, 255, 255)
   graphics.setFont(font.basic)
   graphics.print(state.time, 20, 20)
+  local percent = min(state.contam, 100)
+  graphics.setColor(227 + percent * 0.28, 255 - percent * 1.34, 121)
   graphics.print(tostring(state.contam) .. " %", WIDTH - font.basic:getWidth(tostring(state.contam) .. " %") - 20, 20)
   local _exp_0 = state.stage
   if START == _exp_0 then
