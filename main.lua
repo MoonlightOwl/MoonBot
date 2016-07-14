@@ -135,6 +135,15 @@ do
   _base_0.__class = _class_0
   Garbage = _class_0
 end
+local removeGarbage
+removeGarbage = function()
+  local _list_0 = objects.garbage
+  for _index_0 = 1, #_list_0 do
+    local object = _list_0[_index_0]
+    object.body:destroy()
+  end
+  objects.garbage = { }
+end
 local setStage
 setStage = function(state, stage)
   state.stage = stage
@@ -144,6 +153,7 @@ setStage = function(state, stage)
     state.contam = 0
   elseif GAME == _exp_0 then
     state.time_start = os.time()
+    removeGarbage()
   end
   return state
 end
@@ -171,6 +181,11 @@ love.load = function()
       255,
       215,
       71
+    }, tex.splash, font.splash),
+    gameover = Splash("CONTAMINATED", {
+      255,
+      71,
+      71
     }, tex.splash, font.splash)
   }
   shader = {
@@ -185,8 +200,6 @@ love.load = function()
   objects.moon.fixture = physics.newFixture(objects.moon.body, objects.moon.shape)
   objects.moon.fixture:setFriction(0.7)
   objects.garbage = { }
-  insert(objects.garbage, Garbage(world, 200, 200, tex.box, 10))
-  insert(objects.garbage, Garbage(world, 120, 120, tex.box, 45))
   return setStage(state, START)
 end
 love.update = function(dt)
@@ -203,20 +216,22 @@ love.update = function(dt)
       object.body:applyForce(fx, fy)
     end
     state.contam = #objects.moon.body:getContactList() * DIFFICULTY
+    if state.contam > 100 then
+      return setStage(state, GAMEOVER)
+    end
   end
 end
 love.keypressed = function(key, scancode, isrepeat)
-  local _exp_0 = state.stage
-  if START == _exp_0 then
-    local _exp_1 = key
-    if "return" == _exp_1 then
-      return setStage(state, GAME)
-    elseif "escape" == _exp_1 then
-      return event.quit()
-    end
-  elseif GAME == _exp_0 then
+  if state.stage == GAME then
     if key == "escape" then
       return setStage(state, START)
+    end
+  else
+    local _exp_0 = key
+    if "return" == _exp_0 then
+      return setStage(state, GAME)
+    elseif "escape" == _exp_0 then
+      return event.quit()
     end
   end
 end
@@ -235,7 +250,7 @@ end
 love.draw = function()
   graphics.setColor(255, 255, 255)
   graphics.draw(tex.back, back, 0, 0)
-  if state.stage == START then
+  if state.stage ~= GAME then
     shader.blur:draw(renderWorld)
   else
     renderWorld()
@@ -249,5 +264,7 @@ love.draw = function()
   local _exp_0 = state.stage
   if START == _exp_0 then
     return splash.go:draw()
+  elseif GAMEOVER == _exp_0 then
+    return splash.gameover:draw()
   end
 end

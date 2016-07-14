@@ -74,6 +74,11 @@ class Garbage
 
 -- Game processing -------------------------------------------------------------
 
+removeGarbage = ->
+  for object in *objects.garbage
+    object.body\destroy!
+  objects.garbage = {}
+
 setStage = (state, stage) ->
   state.stage = stage
   switch stage
@@ -82,6 +87,7 @@ setStage = (state, stage) ->
       state.contam = 0
     when GAME
       state.time_start = os.time!
+      removeGarbage!
   state
 
 
@@ -116,6 +122,7 @@ love.load = ->
 
   export splash = {
     go: Splash "ENTER", { 255, 215, 71 }, tex.splash, font.splash
+    gameover: Splash "CONTAMINATED", { 255, 71, 71 }, tex.splash, font.splash
   }
 
   export shader = {
@@ -137,9 +144,6 @@ love.load = ->
   objects.garbage = {}
 
   -- Let's go!
-  insert objects.garbage, Garbage world, 200, 200, tex.box, 10
-  insert objects.garbage, Garbage world, 120, 120, tex.box, 45
-
   setStage state, START
 
 
@@ -161,19 +165,22 @@ love.update = (dt) ->
     -- Calculate contamination level
     state.contam = #objects.moon.body\getContactList! * DIFFICULTY
 
+    -- Check state
+    if state.contam > 100
+      setStage state, GAMEOVER
+
 
 
 love.keypressed = (key, scancode, isrepeat) ->
-  switch state.stage
-    when START
-      switch key
-        when "return"
-          setStage state, GAME
-        when "escape"
-          event.quit!
-    when GAME
-      if key == "escape"
-        setStage state, START
+  if state.stage == GAME
+    if key == "escape"
+      setStage state, START
+  else
+    switch key
+      when "return"
+        setStage state, GAME
+      when "escape"
+        event.quit!
 
 
 
@@ -197,7 +204,7 @@ love.draw = ->
   graphics.setColor 255, 255, 255
   graphics.draw tex.back, back, 0, 0
 
-  if state.stage == START
+  if state.stage != GAME
     shader.blur\draw renderWorld
   else renderWorld!
 
@@ -213,3 +220,5 @@ love.draw = ->
   switch state.stage
     when START
       splash.go\draw!
+    when GAMEOVER
+      splash.gameover\draw!
