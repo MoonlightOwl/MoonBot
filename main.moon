@@ -7,7 +7,7 @@
 
 import insert from table
 import event, graphics, physics, window from love
-import min from math
+import floor, min, random from math
 import Blur from require('shader')
 
 VERSION = 0.1
@@ -85,6 +85,7 @@ setStage = (state, stage) ->
     when START
       state.time = "00:00"
       state.contam = 0
+      state.target_contam = 0
     when GAME
       state.time_start = os.time!
       removeGarbage!
@@ -163,10 +164,11 @@ love.update = (dt) ->
       object.body\applyForce fx, fy
 
     -- Calculate contamination level
-    state.contam = #objects.moon.body\getContactList! * DIFFICULTY
+    state.target_contam = #objects.moon.body\getContactList! * DIFFICULTY
+    state.contam += (state.target_contam - state.contam) * dt
 
     -- Check state
-    if state.contam > 100
+    if state.contam >= 100
       setStage state, GAMEOVER
 
 
@@ -186,7 +188,10 @@ love.keypressed = (key, scancode, isrepeat) ->
 
 love.mousepressed = (x, y, button, istouch) ->
   if button == 1
-    insert objects.garbage, Garbage world, x, y, tex.box, math.random(0, math.pi * 2)
+    garbage = Garbage world, x, y, tex.box, random(0, math.pi * 2)
+    garbage.body\setLinearDamping 0.01
+    garbage.body\setLinearVelocity random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10)
+    insert objects.garbage, garbage
 
 
 
@@ -215,7 +220,7 @@ love.draw = ->
   
   percent = min state.contam, 100
   graphics.setColor 227 + percent * 0.28, 255 - percent * 1.34, 121
-  graphics.print "#{state.contam} %", WIDTH - font.basic\getWidth("#{state.contam} %") - 20, 20
+  graphics.print "#{floor state.contam} %", WIDTH - font.basic\getWidth("#{floor state.contam} %") - 20, 20
 
   switch state.stage
     when START

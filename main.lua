@@ -5,8 +5,11 @@ do
   local _obj_0 = love
   event, graphics, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.physics, _obj_0.window
 end
-local min
-min = math.min
+local floor, min, random
+do
+  local _obj_0 = math
+  floor, min, random = _obj_0.floor, _obj_0.min, _obj_0.random
+end
 local Blur
 Blur = require('shader').Blur
 local VERSION = 0.1
@@ -151,6 +154,7 @@ setStage = function(state, stage)
   if START == _exp_0 then
     state.time = "00:00"
     state.contam = 0
+    state.target_contam = 0
   elseif GAME == _exp_0 then
     state.time_start = os.time()
     removeGarbage()
@@ -215,8 +219,9 @@ love.update = function(dt)
       local fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
       object.body:applyForce(fx, fy)
     end
-    state.contam = #objects.moon.body:getContactList() * DIFFICULTY
-    if state.contam > 100 then
+    state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
+    state.contam = state.contam + ((state.target_contam - state.contam) * dt)
+    if state.contam >= 100 then
       return setStage(state, GAMEOVER)
     end
   end
@@ -237,7 +242,10 @@ love.keypressed = function(key, scancode, isrepeat)
 end
 love.mousepressed = function(x, y, button, istouch)
   if button == 1 then
-    return insert(objects.garbage, Garbage(world, x, y, tex.box, math.random(0, math.pi * 2)))
+    local garbage = Garbage(world, x, y, tex.box, random(0, math.pi * 2))
+    garbage.body:setLinearDamping(0.01)
+    garbage.body:setLinearVelocity(random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10))
+    return insert(objects.garbage, garbage)
   end
 end
 local renderWorld
@@ -260,7 +268,7 @@ love.draw = function()
   graphics.print(state.time, 20, 20)
   local percent = min(state.contam, 100)
   graphics.setColor(227 + percent * 0.28, 255 - percent * 1.34, 121)
-  graphics.print(tostring(state.contam) .. " %", WIDTH - font.basic:getWidth(tostring(state.contam) .. " %") - 20, 20)
+  graphics.print(tostring(floor(state.contam)) .. " %", WIDTH - font.basic:getWidth(tostring(floor(state.contam)) .. " %") - 20, 20)
   local _exp_0 = state.stage
   if START == _exp_0 then
     return splash.go:draw()
