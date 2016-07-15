@@ -12,7 +12,7 @@ import Blur from require('shader')
 
 VERSION = 0.1
 DIFFICULTY = 5
-START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
+START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
 
 
 -- Interface -------------------------------------------------------------------
@@ -74,6 +74,8 @@ class Garbage
 
 -- Game processing -------------------------------------------------------------
 
+nope = -> 0
+
 removeGarbage = ->
   for object in *objects.garbage
     object.body\destroy!
@@ -83,12 +85,19 @@ setStage = (state, stage) ->
   state.stage = stage
   switch stage
     when START
-      state.time = "00:00"
+      state.time = 0
       state.contam = 0
       state.target_contam = 0
-    when GAME
-      state.time_start = os.time!
+    when NEWGAME
+      state.time = 0
+      state.contam = 0
+      state.target_contam = 0
       removeGarbage!
+      state.stage = GAME
+    when GAME
+      nope!
+    when PAUSE
+      nope!
   state
 
 
@@ -124,6 +133,7 @@ love.load = ->
   export splash = {
     go: Splash "ENTER", { 255, 215, 71 }, tex.splash, font.splash
     gameover: Splash "CONTAMINATED", { 255, 71, 71 }, tex.splash, font.splash
+    pause: Splash "PAUSE", { 255, 215, 71 }, tex.splash, font.splash
   }
 
   export shader = {
@@ -171,16 +181,25 @@ love.update = (dt) ->
     if state.contam >= 100
       setStage state, GAMEOVER
 
+    -- Update time
+    state.time += dt
+
 
 
 love.keypressed = (key, scancode, isrepeat) ->
   if state.stage == GAME
-    if key == "escape"
-      setStage state, START
+    switch key
+      when "escape"
+        setStage state, START
+      when "p"
+        setStage state, PAUSE
+  else if state.stage == PAUSE
+    if key == "p" or key == "return"
+      setStage state, GAME
   else
     switch key
       when "return"
-        setStage state, GAME
+        setStage state, NEWGAME
       when "escape"
         event.quit!
 
@@ -216,7 +235,7 @@ love.draw = ->
   -- UI
   graphics.setColor 255, 255, 255
   graphics.setFont font.basic
-  graphics.print state.time, 20, 20
+  graphics.print os.date("%M:%S", state.time), 20, 20
   
   percent = min state.contam, 100
   graphics.setColor 227 + percent * 0.28, 255 - percent * 1.34, 121
@@ -227,3 +246,5 @@ love.draw = ->
       splash.go\draw!
     when GAMEOVER
       splash.gameover\draw!
+    when PAUSE
+      splash.pause\draw!

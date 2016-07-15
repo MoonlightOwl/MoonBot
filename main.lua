@@ -14,7 +14,7 @@ local Blur
 Blur = require('shader').Blur
 local VERSION = 0.1
 local DIFFICULTY = 5
-local START, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4
+local START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
 local View
 do
   local _class_0
@@ -138,6 +138,10 @@ do
   _base_0.__class = _class_0
   Garbage = _class_0
 end
+local nope
+nope = function()
+  return 0
+end
 local removeGarbage
 removeGarbage = function()
   local _list_0 = objects.garbage
@@ -152,12 +156,19 @@ setStage = function(state, stage)
   state.stage = stage
   local _exp_0 = stage
   if START == _exp_0 then
-    state.time = "00:00"
+    state.time = 0
     state.contam = 0
     state.target_contam = 0
-  elseif GAME == _exp_0 then
-    state.time_start = os.time()
+  elseif NEWGAME == _exp_0 then
+    state.time = 0
+    state.contam = 0
+    state.target_contam = 0
     removeGarbage()
+    state.stage = GAME
+  elseif GAME == _exp_0 then
+    nope()
+  elseif PAUSE == _exp_0 then
+    nope()
   end
   return state
 end
@@ -189,6 +200,11 @@ love.load = function()
     gameover = Splash("CONTAMINATED", {
       255,
       71,
+      71
+    }, tex.splash, font.splash),
+    pause = Splash("PAUSE", {
+      255,
+      215,
       71
     }, tex.splash, font.splash)
   }
@@ -222,21 +238,31 @@ love.update = function(dt)
     state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
     state.contam = state.contam + ((state.target_contam - state.contam) * dt)
     if state.contam >= 100 then
-      return setStage(state, GAMEOVER)
+      setStage(state, GAMEOVER)
     end
+    state.time = state.time + dt
   end
 end
 love.keypressed = function(key, scancode, isrepeat)
   if state.stage == GAME then
-    if key == "escape" then
+    local _exp_0 = key
+    if "escape" == _exp_0 then
       return setStage(state, START)
+    elseif "p" == _exp_0 then
+      return setStage(state, PAUSE)
     end
   else
-    local _exp_0 = key
-    if "return" == _exp_0 then
-      return setStage(state, GAME)
-    elseif "escape" == _exp_0 then
-      return event.quit()
+    if state.stage == PAUSE then
+      if key == "p" or key == "return" then
+        return setStage(state, GAME)
+      end
+    else
+      local _exp_0 = key
+      if "return" == _exp_0 then
+        return setStage(state, NEWGAME)
+      elseif "escape" == _exp_0 then
+        return event.quit()
+      end
     end
   end
 end
@@ -265,7 +291,7 @@ love.draw = function()
   end
   graphics.setColor(255, 255, 255)
   graphics.setFont(font.basic)
-  graphics.print(state.time, 20, 20)
+  graphics.print(os.date("%M:%S", state.time), 20, 20)
   local percent = min(state.contam, 100)
   graphics.setColor(227 + percent * 0.28, 255 - percent * 1.34, 121)
   graphics.print(tostring(floor(state.contam)) .. " %", WIDTH - font.basic:getWidth(tostring(floor(state.contam)) .. " %") - 20, 20)
@@ -274,5 +300,7 @@ love.draw = function()
     return splash.go:draw()
   elseif GAMEOVER == _exp_0 then
     return splash.gameover:draw()
+  elseif PAUSE == _exp_0 then
+    return splash.pause:draw()
   end
 end
