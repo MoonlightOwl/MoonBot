@@ -8,69 +8,15 @@
 import insert from table
 import event, graphics, physics, window from love
 import floor, min, random from math
-import Blur from require('shader')
+import Blur from require 'shader'
+import Splash from require 'ui'
+import Moon from require 'moon'
+import Garbage from require 'garbage'
+import Robot from require 'robot'
 
 VERSION = 0.1
 DIFFICULTY = 5
 START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
-
-
--- Interface -------------------------------------------------------------------
-
-class View
-  new: =>
-    @visible = true
-
-  setVisibility: (visible) =>
-    @visible = visible
-    @
-
-  show: =>
-    @visible = true
-    @
-
-  hide: =>
-    @visible = false
-    @
-
-class Splash extends View
-  new: (text, color, back, font) =>
-    super!
-    @text = text
-    @back = back
-    @font = font
-    @color = color
-    @off = {}
-    x, y = back\getDimensions!
-    @off.x = x / 2
-    @off.y = y / 2
-
-  draw: =>
-    if @visible
-      graphics.setColor 255, 255, 255
-      graphics.draw @back, WIDTH / 2, HEIGTH / 2, 0, 1, 1, @off.x, @off.y
-      graphics.setColor @color
-      graphics.setFont @font
-      graphics.print @text, 
-        WIDTH / 2 - @font\getWidth(@text) / 2, HEIGTH / 2 - @font\getHeight! / 2
-
-
--- Game objects ----------------------------------------------------------------
-
-class Garbage
-  new: (world, x, y, texture, angle) =>
-    @width, @height = texture\getDimensions!
-    @texture = texture
-    @body = physics.newBody world, x, y, "dynamic"
-    @body\setAngle angle
-    @shape = physics.newRectangleShape 0, 0, @width, @height
-    @fixture = physics.newFixture @body, @shape, 2
-    @fixture\setFriction 0.4
-
-  draw: =>
-    graphics.draw @texture, @body\getX!, @body\getY!, 
-      @body\getAngle!, 1, 1, @width / 2, @height / 2
-
 
 -- Game processing -------------------------------------------------------------
 
@@ -101,6 +47,16 @@ setStage = (state, stage) ->
   state
 
 
+gravitate = (object, moon, gravity) ->
+  gravity = gravity or GRAVITY
+  mx, my = moon.body\getPosition!
+  x, y = object.body\getPosition!
+  dx, dy = mx - x, my - y
+  len = math.sqrt dx * dx + dy * dy
+  fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
+  object.body\applyForce fx, fy
+
+
 -- Love cycle ------------------------------------------------------------------
 
 love.load = ->
@@ -108,7 +64,6 @@ love.load = ->
   export state = {}   -- game state table
 
   export WIDTH, HEIGTH = window.getMode!
-  export RADIUS = 100 -- size of the moon
   export GRAVITY = 50  -- moon gravity
 
   math.randomseed os.time!
@@ -122,13 +77,12 @@ love.load = ->
     robot: graphics.newImage 'images/robot.png'
     splash: graphics.newImage 'images/splash.png'
   }
+  export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
 
   export font = {
     basic: graphics.newFont 'fonts/Anonymous Pro Minus.ttf', 26
     splash: graphics.newFont 'fonts/Anonymous Pro Minus B.ttf', 68
   }
-
-  export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
 
   export splash = {
     go: Splash "ENTER", { 255, 215, 71 }, tex.splash, font.splash
@@ -144,14 +98,10 @@ love.load = ->
   physics.setMeter 64
 
   export world = physics.newWorld 0, 0, true
-  export objects = {}
 
-  objects.moon = {}
-  objects.moon.body = physics.newBody world, WIDTH/2, HEIGTH/2
-  objects.moon.shape = physics.newCircleShape RADIUS
-  objects.moon.fixture = physics.newFixture objects.moon.body, objects.moon.shape
-  objects.moon.fixture\setFriction 0.7
- 
+  export objects = {}
+  objects.moon = Moon world, WIDTH / 2, HEIGTH / 2, tex.moon
+  objects.robot = Robot world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30, tex.robot
   objects.garbage = {}
 
   -- Let's go!
@@ -165,24 +115,23 @@ love.update = (dt) ->
     world\update dt
 
     -- Gravitate to the Moon
-    mx, my = objects.moon.body\getPosition!
     for object in *objects.garbage
-      x, y = object.body\getPosition!
-      dx, dy = mx - x, my - y
-      len = math.sqrt dx * dx + dy * dy
-      fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
-      object.body\applyForce fx, fy
+      gravitate object, objects.moon
+    gravitate objects.robot, objects.moon, GRAVITY * 10
+
+    -- Update player
+    objects.robot\update dt, objects.moon
 
     -- Calculate contamination level
     state.target_contam = #objects.moon.body\getContactList! * DIFFICULTY
     state.contam += (state.target_contam - state.contam) * dt
 
+    -- Update time
+    state.time += dt
+
     -- Check state
     if state.contam >= 100
       setStage state, GAMEOVER
-
-    -- Update time
-    state.time += dt
 
 
 
@@ -208,17 +157,16 @@ love.keypressed = (key, scancode, isrepeat) ->
 love.mousepressed = (x, y, button, istouch) ->
   if button == 1
     garbage = Garbage world, x, y, tex.box, random(0, math.pi * 2)
-    garbage.body\setLinearDamping 0.01
     garbage.body\setLinearVelocity random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10)
     insert objects.garbage, garbage
 
 
 
 renderWorld = ->
-  -- Moon
-  graphics.draw tex.moon, objects.moon.body\getX!, objects.moon.body\getY!, 
-    objects.moon.body\getAngle!, 1, 1, RADIUS, RADIUS
- 
+  -- Robot & moon
+  objects.moon\draw!
+  objects.robot\draw!
+
   -- Garbage
   for k, v in pairs objects.garbage
     v\draw!
