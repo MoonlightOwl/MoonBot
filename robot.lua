@@ -28,6 +28,11 @@ do
     moveRight = function(self, force)
       return self.body:applyForce(cos(self.angle) * force, sin(self.angle) * force)
     end,
+    reset = function(self)
+      self.body:setPosition(self.initialX, self.initialY)
+      self.body:setLinearVelocity(0, 0)
+      return self.body:setInertia(0)
+    end,
     update = function(self, dt, moon)
       local dx = self:getX() - moon:getX()
       local dy = self:getY() - moon:getY()
@@ -40,6 +45,8 @@ do
   _base_0.__index = _base_0
   _class_0 = setmetatable({
     __init = function(self, world, x, y, tex)
+      self.initialX = x
+      self.initialY = y
       self.body = physics.newBody(world, x, y, "dynamic")
       self.body:setLinearDamping(1.0)
       self.height, self.width = tex:getDimensions()

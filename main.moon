@@ -13,6 +13,7 @@ import Splash from require 'ui'
 import Moon from require 'moon'
 import Garbage from require 'garbage'
 import Robot from require 'robot'
+import Bullet from require 'bullet'
 
 VERSION = 0.1
 DIFFICULTY = 5
@@ -39,6 +40,7 @@ setStage = (state, stage) ->
       state.contam = 0
       state.target_contam = 0
       removeGarbage!
+      objects.robot\reset!
       state.stage = GAME
     when GAME
       nope!
@@ -76,6 +78,7 @@ love.load = ->
     box: graphics.newImage 'images/box.png'
     robot: graphics.newImage 'images/robot.png'
     splash: graphics.newImage 'images/splash.png'
+    bullet0: graphics.newImage 'images/bullet0.png'
   }
   export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
 
@@ -103,6 +106,7 @@ love.load = ->
   objects.moon = Moon world, WIDTH / 2, HEIGTH / 2, tex.moon
   objects.robot = Robot world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30, tex.robot
   objects.garbage = {}
+  objects.bullets = {}
 
   -- Let's go!
   setStage state, START
@@ -118,6 +122,16 @@ love.update = (dt) ->
     for object in *objects.garbage
       gravitate object, objects.moon
     gravitate objects.robot, objects.moon, GRAVITY * 10
+
+    -- Update bullets
+    alive_bullets = {}
+    for bullet in *objects.bullets
+      if bullet\isDead!
+        bullet.body\destroy!
+      else
+        insert alive_bullets, bullet
+    objects.bullets = alive_bullets
+
 
     -- Update player
     objects.robot\update dt, objects.moon
@@ -157,10 +171,12 @@ love.keypressed = (key, scancode, isrepeat) ->
 
 
 love.mousepressed = (x, y, button, istouch) ->
-  if button == 1
+  if button == 2
     garbage = Garbage world, x, y, tex.box, random(0, math.pi * 2)
     garbage.body\setLinearVelocity random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10)
     insert objects.garbage, garbage
+  else if button == 1
+    print "Пыщ-пыщ!"
 
 
 

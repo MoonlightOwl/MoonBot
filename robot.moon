@@ -3,6 +3,8 @@ import cos, pi, sin from math
 
 class Robot
   new: (world, x, y, tex) =>
+    @initialX = x
+    @initialY = y
     @body = physics.newBody world, x, y, "dynamic"
     @body\setLinearDamping 1.0
     @height, @width = tex\getDimensions!
@@ -21,6 +23,11 @@ class Robot
     @body\applyForce cos(angle) * force, sin(angle) * force
   moveRight: (force) =>
     @body\applyForce cos(@angle) * force, sin(@angle) * force
+
+  reset: =>
+    @body\setPosition @initialX, @initialY
+    @body\setLinearVelocity 0, 0
+    @body\setInertia 0
 
 
   update: (dt, moon) =>

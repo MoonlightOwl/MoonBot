@@ -20,6 +20,8 @@ local Garbage
 Garbage = require('garbage').Garbage
 local Robot
 Robot = require('robot').Robot
+local Bullet
+Bullet = require('bullet').Bullet
 local VERSION = 0.1
 local DIFFICULTY = 5
 local START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
@@ -49,6 +51,7 @@ setStage = function(state, stage)
     state.contam = 0
     state.target_contam = 0
     removeGarbage()
+    objects.robot:reset()
     state.stage = GAME
   elseif GAME == _exp_0 then
     nope()
@@ -78,7 +81,8 @@ love.load = function()
     moon = graphics.newImage('images/moon.png'),
     box = graphics.newImage('images/box.png'),
     robot = graphics.newImage('images/robot.png'),
-    splash = graphics.newImage('images/splash.png')
+    splash = graphics.newImage('images/splash.png'),
+    bullet0 = graphics.newImage('images/bullet0.png')
   }
   back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
   font = {
@@ -111,6 +115,7 @@ love.load = function()
   objects.moon = Moon(world, WIDTH / 2, HEIGTH / 2, tex.moon)
   objects.robot = Robot(world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30, tex.robot)
   objects.garbage = { }
+  objects.bullets = { }
   return setStage(state, START)
 end
 love.update = function(dt)
@@ -122,6 +127,17 @@ love.update = function(dt)
       gravitate(object, objects.moon)
     end
     gravitate(objects.robot, objects.moon, GRAVITY * 10)
+    local alive_bullets = { }
+    local _list_1 = objects.bullets
+    for _index_0 = 1, #_list_1 do
+      local bullet = _list_1[_index_0]
+      if bullet:isDead() then
+        bullet.body:destroy()
+      else
+        insert(alive_bullets, bullet)
+      end
+    end
+    objects.bullets = alive_bullets
     objects.robot:update(dt, objects.moon)
     if keyboard.isScancodeDown('a') then
       objects.robot:moveLeft(100)
@@ -161,10 +177,14 @@ love.keypressed = function(key, scancode, isrepeat)
   end
 end
 love.mousepressed = function(x, y, button, istouch)
-  if button == 1 then
+  if button == 2 then
     local garbage = Garbage(world, x, y, tex.box, random(0, math.pi * 2))
     garbage.body:setLinearVelocity(random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10))
     return insert(objects.garbage, garbage)
+  else
+    if button == 1 then
+      return print("Пыщ-пыщ!")
+    end
   end
 end
 local renderWorld
