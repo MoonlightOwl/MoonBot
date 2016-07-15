@@ -1,9 +1,9 @@
 local insert
 insert = table.insert
-local event, graphics, physics, window
+local event, graphics, keyboard, physics, window
 do
   local _obj_0 = love
-  event, graphics, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.physics, _obj_0.window
+  event, graphics, keyboard, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.keyboard, _obj_0.physics, _obj_0.window
 end
 local floor, min, random
 do
@@ -123,6 +123,12 @@ love.update = function(dt)
     end
     gravitate(objects.robot, objects.moon, GRAVITY * 10)
     objects.robot:update(dt, objects.moon)
+    if keyboard.isScancodeDown('a') then
+      objects.robot:moveLeft(100)
+    end
+    if keyboard.isScancodeDown('d') then
+      objects.robot:moveRight(100)
+    end
     state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
     state.contam = state.contam + ((state.target_contam - state.contam) * dt)
     state.time = state.time + dt

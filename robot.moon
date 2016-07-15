@@ -1,4 +1,5 @@
 import graphics, physics from love
+import cos, pi, sin from math
 
 class Robot
   new: (world, x, y, tex) =>
@@ -15,10 +16,17 @@ class Robot
   getX: => @body\getX!
   getY: => @body\getY!
 
+  moveLeft: (force) =>
+    angle = @angle - pi
+    @body\applyForce cos(angle) * force, sin(angle) * force
+  moveRight: (force) =>
+    @body\applyForce cos(@angle) * force, sin(@angle) * force
+
+
   update: (dt, moon) =>
     dx = @getX! - moon\getX!
     dy = @getY! - moon\getY!
-    @angle = math.atan2(dy, dx) + math.pi / 2
+    @angle = math.atan2(dy, dx) + pi / 2
 
   draw: =>
     graphics.draw @tex, @body\getX!, @body\getY!, @angle, 1, 1, @width/2, @height/2

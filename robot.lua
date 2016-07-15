@@ -3,6 +3,11 @@ do
   local _obj_0 = love
   graphics, physics = _obj_0.graphics, _obj_0.physics
 end
+local cos, pi, sin
+do
+  local _obj_0 = math
+  cos, pi, sin = _obj_0.cos, _obj_0.pi, _obj_0.sin
+end
 local Robot
 do
   local _class_0
@@ -16,10 +21,17 @@ do
     getY = function(self)
       return self.body:getY()
     end,
+    moveLeft = function(self, force)
+      local angle = self.angle - pi
+      return self.body:applyForce(cos(angle) * force, sin(angle) * force)
+    end,
+    moveRight = function(self, force)
+      return self.body:applyForce(cos(self.angle) * force, sin(self.angle) * force)
+    end,
     update = function(self, dt, moon)
       local dx = self:getX() - moon:getX()
       local dy = self:getY() - moon:getY()
-      self.angle = math.atan2(dy, dx) + math.pi / 2
+      self.angle = math.atan2(dy, dx) + pi / 2
     end,
     draw = function(self)
       return graphics.draw(self.tex, self.body:getX(), self.body:getY(), self.angle, 1, 1, self.width / 2, self.height / 2)

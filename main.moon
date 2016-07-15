@@ -6,7 +6,7 @@
 --
 
 import insert from table
-import event, graphics, physics, window from love
+import event, graphics, keyboard, physics, window from love
 import floor, min, random from math
 import Blur from require 'shader'
 import Splash from require 'ui'
@@ -121,6 +121,8 @@ love.update = (dt) ->
 
     -- Update player
     objects.robot\update dt, objects.moon
+    if keyboard.isScancodeDown 'a' then objects.robot\moveLeft 100
+    if keyboard.isScancodeDown 'd' then objects.robot\moveRight 100
 
     -- Calculate contamination level
     state.target_contam = #objects.moon.body\getContactList! * DIFFICULTY
