@@ -83,8 +83,8 @@ love.load = ->
   export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
 
   export font = {
-    basic: graphics.newFont 'fonts/Anonymous Pro Minus.ttf', 26
-    splash: graphics.newFont 'fonts/Anonymous Pro Minus B.ttf', 68
+    basic: graphics.newFont 'fonts/Anonymous Pro Minus B.ttf', 26
+    splash: graphics.newFont 'fonts/Anonymous Pro Minus.ttf', 66
   }
 
   export splash = {
@@ -135,8 +135,10 @@ love.update = (dt) ->
 
     -- Update player
     objects.robot\update dt, objects.moon
-    if keyboard.isScancodeDown 'a' then objects.robot\moveLeft 100
-    if keyboard.isScancodeDown 'd' then objects.robot\moveRight 100
+    if keyboard.isScancodeDown 'a', 'left'
+      objects.robot\moveLeft 100
+    if keyboard.isScancodeDown 'd', 'right'
+      objects.robot\moveRight 100
 
     -- Calculate contamination level
     state.target_contam = #objects.moon.body\getContactList! * DIFFICULTY

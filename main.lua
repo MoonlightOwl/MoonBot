@@ -86,8 +86,8 @@ love.load = function()
   }
   back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
   font = {
-    basic = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 26),
-    splash = graphics.newFont('fonts/Anonymous Pro Minus B.ttf', 68)
+    basic = graphics.newFont('fonts/Anonymous Pro Minus B.ttf', 26),
+    splash = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 66)
   }
   splash = {
     go = Splash("ENTER", {
@@ -139,10 +139,10 @@ love.update = function(dt)
     end
     objects.bullets = alive_bullets
     objects.robot:update(dt, objects.moon)
-    if keyboard.isScancodeDown('a') then
+    if keyboard.isScancodeDown('a', 'left') then
       objects.robot:moveLeft(100)
     end
-    if keyboard.isScancodeDown('d') then
+    if keyboard.isScancodeDown('d', 'right') then
       objects.robot:moveRight(100)
     end
     state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
