@@ -5,10 +5,10 @@ do
   local _obj_0 = love
   event, graphics, keyboard, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.keyboard, _obj_0.physics, _obj_0.window
 end
-local floor, min, random, sqrt
+local cos, floor, min, pi, random, sin, sqrt
 do
   local _obj_0 = math
-  floor, min, random, sqrt = _obj_0.floor, _obj_0.min, _obj_0.random, _obj_0.sqrt
+  cos, floor, min, pi, random, sin, sqrt = _obj_0.cos, _obj_0.floor, _obj_0.min, _obj_0.pi, _obj_0.random, _obj_0.sin, _obj_0.sqrt
 end
 local Blur
 Blur = require('shader').Blur
@@ -25,12 +25,18 @@ do
   local _obj_0 = require('bullet')
   Bullet, BulletOne = _obj_0.Bullet, _obj_0.BulletOne
 end
+local Explosion
+Explosion = require('ps').Explosion
 local VERSION = 0.1
 local DIFFICULTY = 5
 local START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
 local nope
 nope = function()
   return 0
+end
+local randomFloat
+randomFloat = function(lower, greater)
+  return lower + random() * (greater - lower)
 end
 local cleanPhysicsUp
 cleanPhysicsUp = function()
@@ -57,6 +63,7 @@ setStage = function(state, stage)
     state.contam = 0
     state.target_contam = 0
   elseif NEWGAME == _exp_0 then
+    state.rate = 100
     state.time = 0
     state.contam = 0
     state.target_contam = 0
@@ -92,14 +99,22 @@ love.load = function()
     robot = graphics.newImage('images/robot.png'),
     splash = graphics.newImage('images/splash.png'),
     bullet = {
-      graphics.newImage('images/bullet0.png'),
-      graphics.newImage('images/bullet1.png')
+      body = {
+        graphics.newImage('images/bullet0.png')
+      },
+      trail = {
+        graphics.newImage('images/trail0.png')
+      },
+      sparkle = {
+        graphics.newImage('images/sparkle0.png')
+      }
     }
   }
   back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
   BulletOne.damage = 1
-  BulletOne.texture = tex.bullet[2]
-  BulletOne.sparkle = tex.bullet[1]
+  BulletOne.texture = tex.bullet.body[1]
+  BulletOne.trail = tex.bullet.trail[1]
+  BulletOne.sparkle = tex.bullet.sparkle[1]
   font = {
     basic = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 28),
     splash = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 66)
@@ -131,6 +146,7 @@ love.load = function()
   objects.robot = Robot(world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30, tex.robot)
   objects.garbage = { }
   objects.bullets = { }
+  explosions = { }
   return setStage(state, START)
 end
 love.update = function(dt)
@@ -142,30 +158,51 @@ love.update = function(dt)
       gravitate(object, objects.moon)
     end
     gravitate(objects.robot, objects.moon, GRAVITY * 10)
+    if random(1, state.rate) == 1 then
+      local angle = randomFloat(0, pi * 2)
+      local x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGTH / 2 + sin(angle) * (WIDTH + 100)
+      local garbage = Garbage(world, x, y, tex.box, random(0, pi * 2))
+      garbage.body:setLinearVelocity(random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2))
+      insert(objects.garbage, garbage)
+    end
     local alive_bullets = { }
     local _list_1 = objects.bullets
     for _index_0 = 1, #_list_1 do
       local bullet = _list_1[_index_0]
       bullet:update(dt)
-      gravitate(bullet, objects.moon, GRAVITY * 0.5)
+      gravitate(bullet, objects.moon, GRAVITY * 0.2)
       local _list_2 = bullet.body:getContactList()
       for _index_1 = 1, #_list_2 do
         local coll = _list_2[_index_1]
         if coll:isTouching() then
           local a, b = coll:getFixtures()
           if a:getGroupIndex() ~= Robot.PH_GROUP and b:getGroupIndex() ~= Robot.PH_GROUP then
+            local explosion = Explosion(bullet:explosion(), bullet:getX(), bullet:getY(), 1.0)
+            insert(explosions, explosion)
             bullet:makeDead()
             break
           end
         end
       end
       if bullet:isDead() then
-        bullet.body:destroy()
+        bullet:destroy()
       else
         insert(alive_bullets, bullet)
       end
     end
     objects.bullets = alive_bullets
+    local alive_explosions = { }
+    local _list_2 = explosions
+    for _index_0 = 1, #_list_2 do
+      local explosion = _list_2[_index_0]
+      explosion:update(dt)
+      if explosion:isDead() then
+        explosion:destroy()
+      else
+        insert(alive_explosions, explosion)
+      end
+    end
+    local explosions = alive_explosions
     objects.robot:update(dt, objects.moon)
     if keyboard.isScancodeDown('a', 'left') then
       objects.robot:moveLeft(80)
@@ -208,18 +245,12 @@ love.keypressed = function(key, scancode, isrepeat)
   end
 end
 love.mousepressed = function(x, y, button, istouch)
-  if button == 2 then
-    local garbage = Garbage(world, x, y, tex.box, random(0, math.pi * 2))
-    garbage.body:setLinearVelocity(random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10))
-    return insert(objects.garbage, garbage)
-  else
-    if button == 1 then
-      local rx, ry = objects.robot:getX(), objects.robot:getY()
-      local dx, dy = x - rx, y - ry
-      local len = sqrt(dx * dx + dy * dy)
-      local bullet = BulletOne(world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
-      return insert(objects.bullets, bullet)
-    end
+  if button == 1 then
+    local rx, ry = objects.robot:getX(), objects.robot:getY()
+    local dx, dy = x - rx, y - ry
+    local len = sqrt(dx * dx + dy * dy)
+    local bullet = BulletOne(world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
+    return insert(objects.bullets, bullet)
   end
 end
 local renderWorld
@@ -235,6 +266,11 @@ renderWorld = function()
   for _index_0 = 1, #_list_1 do
     local bullet = _list_1[_index_0]
     bullet:draw()
+  end
+  local _list_2 = explosions
+  for _index_0 = 1, #_list_2 do
+    local explosion = _list_2[_index_0]
+    explosion:draw()
   end
 end
 love.draw = function()

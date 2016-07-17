@@ -7,13 +7,14 @@
 
 import insert from table
 import event, graphics, keyboard, physics, window from love
-import floor, min, random, sqrt from math
+import cos, floor, min, pi, random, sin, sqrt from math
 import Blur from require 'shader'
 import Splash from require 'ui'
 import Moon from require 'moon'
 import Garbage from require 'garbage'
 import Robot from require 'robot'
 import Bullet, BulletOne from require 'bullet'
+import Explosion from require 'ps'
 
 VERSION = 0.1
 DIFFICULTY = 5
@@ -22,6 +23,9 @@ START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
 -- Game processing -------------------------------------------------------------
 
 nope = -> 0
+
+randomFloat = (lower, greater) ->
+    lower + random! * (greater - lower)
 
 cleanPhysicsUp = ->
   -- Remove garbage
@@ -41,6 +45,7 @@ setStage = (state, stage) ->
       state.contam = 0
       state.target_contam = 0
     when NEWGAME
+      state.rate = 100
       state.time = 0
       state.contam = 0
       state.target_contam = 0
@@ -83,15 +88,23 @@ love.load = ->
     robot: graphics.newImage 'images/robot.png'
     splash: graphics.newImage 'images/splash.png'
     bullet: {
-      graphics.newImage 'images/bullet0.png',
-      graphics.newImage 'images/bullet1.png'
+      body: {
+        graphics.newImage 'images/bullet0.png'
+      }
+      trail: {
+        graphics.newImage 'images/trail0.png'
+      }
+      sparkle: {
+        graphics.newImage 'images/sparkle0.png'
+      }
     }
   }
   export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
 
   BulletOne.damage = 1
-  BulletOne.texture = tex.bullet[2]
-  BulletOne.sparkle = tex.bullet[1]
+  BulletOne.texture = tex.bullet.body[1]
+  BulletOne.trail = tex.bullet.trail[1]
+  BulletOne.sparkle = tex.bullet.sparkle[1]
 
   export font = {
     basic: graphics.newFont 'fonts/Anonymous Pro Minus.ttf', 28
@@ -119,6 +132,9 @@ love.load = ->
   objects.garbage = {}
   objects.bullets = {}
 
+  -- Init particle systems
+  export explosions = {}
+
   -- Let's go!
   setStage state, START
 
@@ -134,23 +150,42 @@ love.update = (dt) ->
       gravitate object, objects.moon
     gravitate objects.robot, objects.moon, GRAVITY * 10
 
+    -- Spawn new garbage
+    if random(1, state.rate) == 1
+      angle = randomFloat 0, pi * 2
+      x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGTH / 2 + sin(angle) * (WIDTH + 100)
+      garbage = Garbage world, x, y, tex.box, random(0, pi * 2)
+      garbage.body\setLinearVelocity random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2)
+      insert objects.garbage, garbage
+
     -- Update bullets
     alive_bullets = {}
     for bullet in *objects.bullets
       bullet\update dt
-      gravitate bullet, objects.moon, GRAVITY * 0.5
+      gravitate bullet, objects.moon, GRAVITY * 0.2
       for coll in *bullet.body\getContactList!
         if coll\isTouching!
           a, b = coll\getFixtures!
           if a\getGroupIndex! ~= Robot.PH_GROUP and b\getGroupIndex! ~= Robot.PH_GROUP
+            explosion = Explosion bullet\explosion!, bullet\getX!, bullet\getY!, 1.0
+            insert explosions, explosion
             bullet\makeDead!
             break
       if bullet\isDead!
-        bullet.body\destroy!
+        bullet\destroy!
       else
         insert alive_bullets, bullet
     objects.bullets = alive_bullets
 
+    -- Update particle systems
+    alive_explosions = {}
+    for explosion in *explosions
+      explosion\update dt
+      if explosion\isDead!
+        explosion\destroy!
+      else
+        insert alive_explosions, explosion
+    explosions = alive_explosions
 
     -- Update player
     objects.robot\update dt, objects.moon
@@ -194,13 +229,8 @@ love.keypressed = (key, scancode, isrepeat) ->
 
 
 love.mousepressed = (x, y, button, istouch) ->
-  -- Create a garbage for the test
-  if button == 2
-    garbage = Garbage world, x, y, tex.box, random(0, math.pi * 2)
-    garbage.body\setLinearVelocity random(-GRAVITY * 10, GRAVITY * 10), random(-GRAVITY * 10, GRAVITY * 10)
-    insert objects.garbage, garbage
-  -- Shoot!
-  else if button == 1
+  -- Fire!
+  if button == 1
     rx, ry = objects.robot\getX!, objects.robot\getY!
     dx, dy = x - rx, y - ry
     len = sqrt dx*dx + dy*dy
@@ -222,6 +252,10 @@ renderWorld = ->
   -- Bullets
   for bullet in *objects.bullets
     bullet\draw!
+
+  -- Explosions
+  for explosion in *explosions
+    explosion\draw!
 
 love.draw = ->
   -- Background

@@ -3,16 +3,30 @@ do
   local _obj_0 = love
   graphics, physics = _obj_0.graphics, _obj_0.physics
 end
+local pi
+pi = math.pi
 local Bullet
 do
   local _class_0
   local _base_0 = {
+    explosion = function(self)
+      local ps = graphics.newParticleSystem(self.sparkle, 32)
+      ps:setParticleLifetime(0.1, 0.5)
+      ps:setEmissionRate(60)
+      ps:setSizeVariation(1)
+      ps:setSizes(1.0, 2.0, 0.5, 0.2)
+      ps:setColors(255, 255, 100, 255, 255, 255, 255, 255, 255, 255, 255, 0)
+      ps:setLinearAcceleration(-60, -60, 60, 60)
+      ps:setSpin(-pi, pi)
+      ps:setSpinVariation(0.5)
+      return ps
+    end,
     update = function(self, dt)
       self.time = self.time - dt
       local sx, sy = self.body:getLinearVelocity()
       sx, sy = -sx * 2, -sy * 2
-      self.psystem:setLinearAcceleration(sx - 10, sy - 10, sx + 10, sy + 10)
-      return self.psystem:update(dt)
+      self.ps_bullet:setLinearAcceleration(sx - 10, sy - 10, sx + 10, sy + 10)
+      return self.ps_bullet:update(dt)
     end,
     makeDead = function(self)
       self.time = 0.0
@@ -20,15 +34,29 @@ do
     isDead = function(self)
       return self.time <= 0.0
     end,
+    getX = function(self)
+      return self.body:getX()
+    end,
+    getY = function(self)
+      return self.body:getY()
+    end,
+    getPosition = function(self)
+      return self.body:getPosition()
+    end,
     draw = function(self)
-      graphics.draw(self.psystem, self.body:getX(), self.body:getY())
+      graphics.draw(self.ps_bullet, self.body:getX(), self.body:getY())
       return graphics.draw(self.texture, self.body:getX(), self.body:getY(), 0, 1, 1, self.size / 2, self.size / 2)
+    end,
+    destroy = function(self)
+      self.body:destroy()
+      return self.ps_bullet:stop()
     end
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
-    __init = function(self, world, x, y, sx, sy, damage, texture, sparkle)
+    __init = function(self, world, x, y, sx, sy, damage, texture, trail, sparkle)
       self.texture = texture
+      self.trail = trail
       self.sparkle = sparkle
       local _
       self.size, _ = self.texture:getDimensions()
@@ -38,16 +66,15 @@ do
       self.body:setLinearDamping(0.0)
       self.body:setLinearVelocity(sx, sy)
       self.body:setBullet(true)
-      self.shape = physics.newCircleShape(self.size / 2)
-      self.fixture = physics.newFixture(self.body, self.shape, 2)
+      self.shape = physics.newCircleShape(self.size / 4)
+      self.fixture = physics.newFixture(self.body, self.shape, 6)
       self.fixture:setGroupIndex(self.__class.PH_GROUP)
-      self.psystem = graphics.newParticleSystem(self.sparkle, 32)
-      self.psystem:setParticleLifetime(0.1, 1)
-      self.psystem:setEmissionRate(30)
-      self.psystem:setSizeVariation(1)
-      self.psystem:setSizes(1.0, 1.1, 1.0, 0.5, 0.2)
-      self.psystem:setColors(255, 255, 255, 255, 255, 255, 255, 0)
-      return self.psystem:setSpeed(20)
+      self.ps_bullet = graphics.newParticleSystem(self.trail, 32)
+      self.ps_bullet:setParticleLifetime(0.1, 1)
+      self.ps_bullet:setEmissionRate(30)
+      self.ps_bullet:setSizeVariation(1)
+      self.ps_bullet:setSizes(1.0, 1.1, 1.0, 0.5, 0.2)
+      return self.ps_bullet:setColors(255, 255, 255, 255, 255, 255, 255, 0)
     end,
     __base = _base_0,
     __name = "Bullet"
@@ -74,7 +101,7 @@ do
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
     __init = function(self, world, x, y, sx, sy)
-      return _class_0.__parent.__init(self, world, x, y, sx, sy, self.__class.damage, self.__class.texture, self.__class.sparkle)
+      return _class_0.__parent.__init(self, world, x, y, sx, sy, self.__class.damage, self.__class.texture, self.__class.trail, self.__class.sparkle)
     end,
     __base = _base_0,
     __name = "BulletOne",
@@ -100,6 +127,7 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.texture = nil
+  self.trail = nil
   self.sparkle = nil
   self.damage = 0
   if _parent_0.__inherited then
