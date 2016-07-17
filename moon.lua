@@ -30,7 +30,8 @@ do
       self.radius = self.radius / 2
       self.shape = physics.newCircleShape(self.radius)
       self.fixture = physics.newFixture(self.body, self.shape)
-      return self.fixture:setFriction(0.7)
+      self.fixture:setFriction(0.7)
+      return self.fixture:setGroupIndex(self.__class.PH_GROUP)
     end,
     __base = _base_0,
     __name = "Moon"
@@ -43,6 +44,8 @@ do
     end
   })
   _base_0.__class = _class_0
+  local self = _class_0
+  self.PH_GROUP = 1
   Moon = _class_0
 end
 return {

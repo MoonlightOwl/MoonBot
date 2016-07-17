@@ -1,6 +1,8 @@
 import graphics, physics from love
 
 class Garbage
+  @PH_GROUP: 3
+
   new: (world, x, y, texture, angle) =>
     @width, @height = texture\getDimensions!
     @texture = texture
@@ -10,6 +12,7 @@ class Garbage
     @shape = physics.newRectangleShape 0, 0, @width, @height
     @fixture = physics.newFixture @body, @shape, 2
     @fixture\setFriction 0.4
+    @fixture\setGroupIndex @@PH_GROUP
 
   draw: =>
     graphics.draw @texture, @body\getX!, @body\getY!,

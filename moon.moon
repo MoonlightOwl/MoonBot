@@ -1,6 +1,8 @@
 import graphics, physics from love
 
 class Moon
+  @PH_GROUP: 1
+
   new: (world, x, y, tex) =>
     @tex = tex
     @body = physics.newBody world, x, y
@@ -9,6 +11,7 @@ class Moon
     @shape = physics.newCircleShape @radius
     @fixture = physics.newFixture @body, @shape
     @fixture\setFriction 0.7
+    @fixture\setGroupIndex @@PH_GROUP
 
   getPosition: => @body\getPosition!
   getX: => @body\getX!

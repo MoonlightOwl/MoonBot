@@ -22,11 +22,16 @@ do
       return self.body:getY()
     end,
     moveLeft = function(self, force)
-      local angle = self.angle - pi
-      return self.body:applyForce(cos(angle) * force, sin(angle) * force)
+      return self:thrust(force, self.angle - pi)
     end,
     moveRight = function(self, force)
-      return self.body:applyForce(cos(self.angle) * force, sin(self.angle) * force)
+      return self:thrust(force, self.angle)
+    end,
+    jump = function(self, force)
+      return self:thrust(force, self.angle - pi / 2)
+    end,
+    thrust = function(self, force, angle)
+      return self.body:applyForce(cos(angle) * force, sin(angle) * force)
     end,
     reset = function(self)
       self.body:setPosition(self.initialX, self.initialY)
@@ -53,6 +58,7 @@ do
       self.shape = physics.newCircleShape(self.width / 2 + 2)
       self.fixture = physics.newFixture(self.body, self.shape)
       self.fixture:setFriction(1.0)
+      self.fixture:setGroupIndex(self.__class.PH_GROUP)
       self.angle = 0.0
       self.tex = tex
     end,
@@ -67,6 +73,8 @@ do
     end
   })
   _base_0.__class = _class_0
+  local self = _class_0
+  self.PH_GROUP = 2
   Robot = _class_0
 end
 return {

@@ -2,6 +2,8 @@ import graphics, physics from love
 import cos, pi, sin from math
 
 class Robot
+  @PH_GROUP: 2
+
   new: (world, x, y, tex) =>
     @initialX = x
     @initialY = y
@@ -11,6 +13,7 @@ class Robot
     @shape = physics.newCircleShape @width / 2 + 2
     @fixture = physics.newFixture @body, @shape
     @fixture\setFriction 1.0
+    @fixture\setGroupIndex @@PH_GROUP
     @angle = 0.0
     @tex = tex
 
@@ -18,11 +21,12 @@ class Robot
   getX: => @body\getX!
   getY: => @body\getY!
 
-  moveLeft: (force) =>
-    angle = @angle - pi
+  moveLeft: (force) => @thrust force, @angle - pi
+  moveRight: (force) => @thrust force, @angle
+  jump: (force) => @thrust force, @angle - pi/2
+
+  thrust: (force, angle) =>
     @body\applyForce cos(angle) * force, sin(angle) * force
-  moveRight: (force) =>
-    @body\applyForce cos(@angle) * force, sin(@angle) * force
 
   reset: =>
     @body\setPosition @initialX, @initialY

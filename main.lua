@@ -5,10 +5,10 @@ do
   local _obj_0 = love
   event, graphics, keyboard, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.keyboard, _obj_0.physics, _obj_0.window
 end
-local floor, min, random
+local floor, min, random, sqrt
 do
   local _obj_0 = math
-  floor, min, random = _obj_0.floor, _obj_0.min, _obj_0.random
+  floor, min, random, sqrt = _obj_0.floor, _obj_0.min, _obj_0.random, _obj_0.sqrt
 end
 local Blur
 Blur = require('shader').Blur
@@ -20,8 +20,11 @@ local Garbage
 Garbage = require('garbage').Garbage
 local Robot
 Robot = require('robot').Robot
-local Bullet
-Bullet = require('bullet').Bullet
+local Bullet, BulletOne
+do
+  local _obj_0 = require('bullet')
+  Bullet, BulletOne = _obj_0.Bullet, _obj_0.BulletOne
+end
 local VERSION = 0.1
 local DIFFICULTY = 5
 local START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
@@ -29,14 +32,21 @@ local nope
 nope = function()
   return 0
 end
-local removeGarbage
-removeGarbage = function()
+local cleanPhysicsUp
+cleanPhysicsUp = function()
   local _list_0 = objects.garbage
   for _index_0 = 1, #_list_0 do
     local object = _list_0[_index_0]
     object.body:destroy()
   end
   objects.garbage = { }
+  local _list_1 = objects.bullets
+  for _index_0 = 1, #_list_1 do
+    local object = _list_1[_index_0]
+    object.body:destroy()
+  end
+  objects.bullets = { }
+  return objects.robot:reset()
 end
 local setStage
 setStage = function(state, stage)
@@ -50,8 +60,7 @@ setStage = function(state, stage)
     state.time = 0
     state.contam = 0
     state.target_contam = 0
-    removeGarbage()
-    objects.robot:reset()
+    cleanPhysicsUp()
     state.stage = GAME
   elseif GAME == _exp_0 then
     nope()
@@ -82,11 +91,17 @@ love.load = function()
     box = graphics.newImage('images/box.png'),
     robot = graphics.newImage('images/robot.png'),
     splash = graphics.newImage('images/splash.png'),
-    bullet0 = graphics.newImage('images/bullet0.png')
+    bullet = {
+      graphics.newImage('images/bullet0.png'),
+      graphics.newImage('images/bullet1.png')
+    }
   }
   back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
+  BulletOne.damage = 1
+  BulletOne.texture = tex.bullet[2]
+  BulletOne.sparkle = tex.bullet[1]
   font = {
-    basic = graphics.newFont('fonts/Anonymous Pro Minus B.ttf', 26),
+    basic = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 28),
     splash = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 66)
   }
   splash = {
@@ -131,6 +146,19 @@ love.update = function(dt)
     local _list_1 = objects.bullets
     for _index_0 = 1, #_list_1 do
       local bullet = _list_1[_index_0]
+      bullet:update(dt)
+      gravitate(bullet, objects.moon, GRAVITY * 0.5)
+      local _list_2 = bullet.body:getContactList()
+      for _index_1 = 1, #_list_2 do
+        local coll = _list_2[_index_1]
+        if coll:isTouching() then
+          local a, b = coll:getFixtures()
+          if a:getGroupIndex() ~= Robot.PH_GROUP and b:getGroupIndex() ~= Robot.PH_GROUP then
+            bullet:makeDead()
+            break
+          end
+        end
+      end
       if bullet:isDead() then
         bullet.body:destroy()
       else
@@ -140,10 +168,13 @@ love.update = function(dt)
     objects.bullets = alive_bullets
     objects.robot:update(dt, objects.moon)
     if keyboard.isScancodeDown('a', 'left') then
-      objects.robot:moveLeft(100)
+      objects.robot:moveLeft(80)
     end
     if keyboard.isScancodeDown('d', 'right') then
-      objects.robot:moveRight(100)
+      objects.robot:moveRight(80)
+    end
+    if keyboard.isScancodeDown('w', 'up') then
+      objects.robot:jump(80)
     end
     state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
     state.contam = state.contam + ((state.target_contam - state.contam) * dt)
@@ -183,7 +214,11 @@ love.mousepressed = function(x, y, button, istouch)
     return insert(objects.garbage, garbage)
   else
     if button == 1 then
-      return print("Пыщ-пыщ!")
+      local rx, ry = objects.robot:getX(), objects.robot:getY()
+      local dx, dy = x - rx, y - ry
+      local len = sqrt(dx * dx + dy * dy)
+      local bullet = BulletOne(world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
+      return insert(objects.bullets, bullet)
     end
   end
 end
@@ -191,8 +226,15 @@ local renderWorld
 renderWorld = function()
   objects.moon:draw()
   objects.robot:draw()
-  for k, v in pairs(objects.garbage) do
-    v:draw()
+  local _list_0 = objects.garbage
+  for _index_0 = 1, #_list_0 do
+    local garbage = _list_0[_index_0]
+    garbage:draw()
+  end
+  local _list_1 = objects.bullets
+  for _index_0 = 1, #_list_1 do
+    local bullet = _list_1[_index_0]
+    bullet:draw()
   end
 end
 love.draw = function()
