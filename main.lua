@@ -126,14 +126,30 @@ love.load = function()
   explosions = { }
   return setStage(state, START)
 end
+local hitABox
+hitABox = function(fixture, damage)
+  if fixture:getGroupIndex() == Garbage.PH_GROUP then
+    local garbage = fixture:getUserData()
+    garbage:hit(damage)
+    local _ = true
+  end
+  return false
+end
 love.update = function(dt)
   if state.stage == GAME then
     world:update(dt)
+    local alive_garbage = { }
     local _list_0 = objects.garbage
     for _index_0 = 1, #_list_0 do
-      local object = _list_0[_index_0]
-      gravitate(object, objects.moon)
+      local garbage = _list_0[_index_0]
+      if garbage:isDestroyed() then
+        garbage:destroy()
+      else
+        gravitate(garbage, objects.moon)
+        insert(alive_garbage, garbage)
+      end
     end
+    objects.garbage = alive_garbage
     gravitate(objects.robot, objects.moon, GRAVITY * 10)
     if random(1, state.rate) == 1 then
       local angle = randomFloat(0, pi * 2)
@@ -153,6 +169,8 @@ love.update = function(dt)
         if coll:isTouching() then
           local a, b = coll:getFixtures()
           if a:getGroupIndex() ~= Robot.PH_GROUP and b:getGroupIndex() ~= Robot.PH_GROUP then
+            hitABox(a, bullet.damage)
+            hitABox(b, bullet.damage)
             local explosion = Explosion(assets, bullet:getX(), bullet:getY(), 1.0)
             insert(explosions, explosion)
             bullet:makeDead()

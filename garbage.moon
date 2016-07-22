@@ -16,6 +16,7 @@ class Garbage
     @fixture = physics.newFixture @body, @shape, 2
     @fixture\setFriction 0.4
     @fixture\setGroupIndex @@PH_GROUP
+    @fixture\setUserData @
 
   hit: (damage) =>
     @life -= damage
@@ -29,5 +30,8 @@ class Garbage
   draw: =>
     graphics.draw (if @isDamaged! then @texture_damaged else @texture), @body\getX!, @body\getY!,
       @body\getAngle!, 1, 1, @width / 2, @height / 2
+
+  destroy: =>
+    @body\destroy!
 
 { :Garbage }

@@ -24,6 +24,9 @@ do
           return self.texture
         end
       end)()), self.body:getX(), self.body:getY(), self.body:getAngle(), 1, 1, self.width / 2, self.height / 2)
+    end,
+    destroy = function(self)
+      return self.body:destroy()
     end
   }
   _base_0.__index = _base_0
@@ -39,7 +42,8 @@ do
       self.shape = physics.newRectangleShape(0, 0, self.width, self.height)
       self.fixture = physics.newFixture(self.body, self.shape, 2)
       self.fixture:setFriction(0.4)
-      return self.fixture:setGroupIndex(self.__class.PH_GROUP)
+      self.fixture:setGroupIndex(self.__class.PH_GROUP)
+      return self.fixture:setUserData(self)
     end,
     __base = _base_0,
     __name = "Garbage"

@@ -109,6 +109,12 @@ love.load = ->
   setStage state, START
 
 
+hitABox = (fixture, damage) ->
+  if fixture\getGroupIndex! == Garbage.PH_GROUP
+    garbage = fixture\getUserData!
+    garbage\hit damage
+    true
+  false
 
 love.update = (dt) ->
   if state.stage == GAME
@@ -116,8 +122,15 @@ love.update = (dt) ->
     world\update dt
 
     -- Gravitate to the Moon
-    for object in *objects.garbage
-      gravitate object, objects.moon
+    alive_garbage = {}
+    for garbage in *objects.garbage
+      if garbage\isDestroyed!
+        garbage\destroy!
+      else
+        gravitate garbage, objects.moon
+        insert alive_garbage, garbage
+    objects.garbage = alive_garbage
+
     gravitate objects.robot, objects.moon, GRAVITY * 10
 
     -- Spawn new garbage
@@ -136,6 +149,8 @@ love.update = (dt) ->
         if coll\isTouching!
           a, b = coll\getFixtures!
           if a\getGroupIndex! ~= Robot.PH_GROUP and b\getGroupIndex! ~= Robot.PH_GROUP
+            hitABox a, bullet.damage
+            hitABox b, bullet.damage
             explosion = Explosion assets, bullet\getX!, bullet\getY!, 1.0
             insert explosions, explosion
             bullet\makeDead!
