@@ -53,14 +53,14 @@ do
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
-    __init = function(self, text, color, back, font)
+    __init = function(self, assets, text, color)
       _class_0.__parent.__init(self)
       self.text = text
-      self.back = back
-      self.font = font
+      self.back = assets.tex.splash
+      self.font = assets.font.splash
       self.color = color
       self.off = { }
-      local x, y = back:getDimensions()
+      local x, y = self.back:getDimensions()
       self.off.x = x / 2
       self.off.y = y / 2
     end,

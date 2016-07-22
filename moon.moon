@@ -3,10 +3,10 @@ import graphics, physics from love
 class Moon
   @PH_GROUP: 1
 
-  new: (world, x, y, tex) =>
-    @tex = tex
+  new: (assets, world, x, y) =>
+    @tex = assets.tex.moon
     @body = physics.newBody world, x, y
-    @radius, _ = tex\getDimensions!
+    @radius, _ = @tex\getDimensions!
     @radius /= 2
     @shape = physics.newCircleShape @radius
     @fixture = physics.newFixture @body, @shape

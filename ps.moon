@@ -72,8 +72,8 @@ getPS = (name, image) ->
 
 
 class Explosion
-  new: (x, y, time, tex) =>
-    @ps = getPS 'fx/explosion', tex
+  new: (assets, x, y, time) =>
+    @ps = getPS 'fx/explosion', assets.tex.cloud
     @x = x
     @y = y
     @time = time

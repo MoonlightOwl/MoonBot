@@ -4,18 +4,18 @@ import cos, pi, sin from math
 class Robot
   @PH_GROUP: 2
 
-  new: (world, x, y, tex) =>
+  new: (assets, world, x, y) =>
+    @tex = assets.tex.robot
+    @height, @width = @tex\getDimensions!
     @initialX = x
     @initialY = y
     @body = physics.newBody world, x, y, "dynamic"
     @body\setLinearDamping 1.0
-    @height, @width = tex\getDimensions!
     @shape = physics.newCircleShape @width / 2 + 2
     @fixture = physics.newFixture @body, @shape
     @fixture\setFriction 1.0
     @fixture\setGroupIndex @@PH_GROUP
     @angle = 0.0
-    @tex = tex
 
   getPosition: => @body\getPosition!
   getX: => @body\getX!

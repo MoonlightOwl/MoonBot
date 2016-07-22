@@ -3,9 +3,9 @@ import graphics, physics from love
 class Garbage
   @PH_GROUP: 3
 
-  new: (world, x, y, texture, angle) =>
-    @width, @height = texture\getDimensions!
-    @texture = texture
+  new: (assets, world, x, y, angle) =>
+    @texture = assets.tex.box
+    @width, @height = @texture\getDimensions!
     @body = physics.newBody world, x, y, "dynamic"
     @body\setAngle angle
     @body\setLinearDamping 0.1

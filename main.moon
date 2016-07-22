@@ -8,6 +8,7 @@
 import insert from table
 import event, graphics, keyboard, physics, window from love
 import cos, floor, min, pi, random, sin, sqrt from math
+import Assets from require 'assets'
 import Blur from require 'shader'
 import Splash from require 'ui'
 import Moon from require 'moon'
@@ -81,55 +82,23 @@ love.load = ->
   window.setTitle "MoonBot!  #{VERSION}"
 
   -- Load graphics
-  export tex = {
-    back: graphics.newImage 'images/back.png'
-    moon: graphics.newImage 'images/moon.png'
-    box: graphics.newImage 'images/box.png'
-    robot: graphics.newImage 'images/robot.png'
-    splash: graphics.newImage 'images/splash.png'
-    cloud: graphics.newImage 'images/cloud.png'
-    bullet: {
-      body: {
-        graphics.newImage 'images/bullet0.png'
-      }
-      trail: {
-        graphics.newImage 'images/trail0.png'
-      }
-      sparkle: {
-        graphics.newImage 'images/sparkle0.png'
-      }
-    }
-  }
+  export assets = Assets!
   export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
-
-  BulletOne.damage = 1
-  BulletOne.texture = tex.bullet.body[1]
-  BulletOne.trail = tex.bullet.trail[1]
-  BulletOne.sparkle = tex.bullet.sparkle[1]
-
-  export font = {
-    basic: graphics.newFont 'fonts/Anonymous Pro Minus.ttf', 28
-    splash: graphics.newFont 'fonts/Anonymous Pro Minus.ttf', 66
-  }
-
   export splash = {
-    go: Splash "ENTER", { 255, 215, 71 }, tex.splash, font.splash
-    gameover: Splash "CONTAMINATED", { 255, 71, 71 }, tex.splash, font.splash
-    pause: Splash "PAUSE", { 255, 215, 71 }, tex.splash, font.splash
+    go: Splash assets, "ENTER", { 255, 215, 71 }
+    gameover: Splash assets, "CONTAMINATED", { 255, 71, 71 }
+    pause: Splash assets, "PAUSE", { 255, 215, 71 }
   }
-
   export shader = {
     blur: Blur!
   }
 
   -- Init physics
   physics.setMeter 64
-
   export world = physics.newWorld 0, 0, true
-
   export objects = {}
-  objects.moon = Moon world, WIDTH / 2, HEIGTH / 2, tex.moon
-  objects.robot = Robot world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30, tex.robot
+  objects.moon = Moon assets, world, WIDTH / 2, HEIGTH / 2
+  objects.robot = Robot assets, world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30
   objects.garbage = {}
   objects.bullets = {}
 
@@ -155,7 +124,7 @@ love.update = (dt) ->
     if random(1, state.rate) == 1
       angle = randomFloat 0, pi * 2
       x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGTH / 2 + sin(angle) * (WIDTH + 100)
-      garbage = Garbage world, x, y, tex.box, random(0, pi * 2)
+      garbage = Garbage assets, world, x, y, random(0, pi * 2)
       garbage.body\setLinearVelocity random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2)
       insert objects.garbage, garbage
 
@@ -168,7 +137,7 @@ love.update = (dt) ->
         if coll\isTouching!
           a, b = coll\getFixtures!
           if a\getGroupIndex! ~= Robot.PH_GROUP and b\getGroupIndex! ~= Robot.PH_GROUP
-            explosion = Explosion bullet\getX!, bullet\getY!, 1.0, tex.cloud
+            explosion = Explosion assets, bullet\getX!, bullet\getY!, 1.0
             insert explosions, explosion
             bullet\makeDead!
             break
@@ -235,7 +204,7 @@ love.mousepressed = (x, y, button, istouch) ->
     rx, ry = objects.robot\getX!, objects.robot\getY!
     dx, dy = x - rx, y - ry
     len = sqrt dx*dx + dy*dy
-    bullet = BulletOne world, 
+    bullet = BulletOne assets, world, 
       rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2
     insert objects.bullets, bullet
 
@@ -263,7 +232,7 @@ renderWorld = ->
 love.draw = ->
   -- Background
   graphics.setColor 255, 255, 255
-  graphics.draw tex.back, back, 0, 0
+  graphics.draw assets.tex.back, back, 0, 0
 
   if state.stage != GAME
     shader.blur\draw renderWorld
@@ -271,12 +240,13 @@ love.draw = ->
 
   -- UI
   graphics.setColor 255, 255, 255
-  graphics.setFont font.basic
+  graphics.setFont assets.font.basic
   graphics.print os.date("%M:%S", state.time), 20, 20
   
   percent = min state.contam, 100
   graphics.setColor 227 + percent * 0.28, 255 - percent * 1.34, 121
-  graphics.print "#{floor state.contam} %", WIDTH - font.basic\getWidth("#{floor state.contam} %") - 20, 20
+  graphics.print "#{floor state.contam} %", 
+    WIDTH - assets.font.basic\getWidth("#{floor state.contam} %") - 20, 20
 
   switch state.stage
     when START

@@ -4,7 +4,6 @@ local insert
 insert = table.insert
 local getPS
 getPS = function(name, image)
-  print(image)
   local ps_data = require(name)
   local particle_settings = { }
   particle_settings["colors"] = { }
@@ -99,8 +98,8 @@ do
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
-    __init = function(self, x, y, time, tex)
-      self.ps = getPS('fx/explosion', tex)
+    __init = function(self, assets, x, y, time)
+      self.ps = getPS('fx/explosion', assets.tex.cloud)
       self.x = x
       self.y = y
       self.time = time

@@ -13,9 +13,9 @@ do
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
-    __init = function(self, world, x, y, texture, angle)
-      self.width, self.height = texture:getDimensions()
-      self.texture = texture
+    __init = function(self, assets, world, x, y, angle)
+      self.texture = assets.tex.box
+      self.width, self.height = self.texture:getDimensions()
       self.body = physics.newBody(world, x, y, "dynamic")
       self.body:setAngle(angle)
       self.body:setLinearDamping(0.1)

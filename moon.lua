@@ -22,11 +22,11 @@ do
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
-    __init = function(self, world, x, y, tex)
-      self.tex = tex
+    __init = function(self, assets, world, x, y)
+      self.tex = assets.tex.moon
       self.body = physics.newBody(world, x, y)
       local _
-      self.radius, _ = tex:getDimensions()
+      self.radius, _ = self.tex:getDimensions()
       self.radius = self.radius / 2
       self.shape = physics.newCircleShape(self.radius)
       self.fixture = physics.newFixture(self.body, self.shape)

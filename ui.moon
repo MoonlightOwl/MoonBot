@@ -17,14 +17,14 @@ class View
     @
 
 class Splash extends View
-  new: (text, color, back, font) =>
+  new: (assets, text, color) =>
     super!
     @text = text
-    @back = back
-    @font = font
+    @back = assets.tex.splash
+    @font = assets.font.splash
     @color = color
     @off = {}
-    x, y = back\getDimensions!
+    x, y = @back\getDimensions!
     @off.x = x / 2
     @off.y = y / 2
 

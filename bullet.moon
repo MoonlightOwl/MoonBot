@@ -5,11 +5,10 @@ class Bullet
   @LIFE_TIME: 5,
   @PH_GROUP: -1,
 
-  new: (world, x, y, sx, sy, damage, texture, trail, sparkle) =>
+  new: (world, x, y, sx, sy, damage, texture, trail) =>
     -- Init fields
     @texture = texture
     @trail = trail
-    @sparkle = sparkle
     @size, _ = @texture\getDimensions!
     @time = @@LIFE_TIME
     @damage = damage
@@ -56,12 +55,7 @@ class Bullet
 
 
 class BulletOne extends Bullet
-  @texture: nil
-  @trail: nil
-  @sparkle: nil
-  @damage: 0
-
-  new: (world, x, y, sx, sy) =>
-    super world, x, y, sx, sy, @@damage, @@texture, @@trail, @@sparkle
+  new: (assets, world, x, y, sx, sy) =>
+    super world, x, y, sx, sy, 1, assets.tex.bullet0, assets.tex.trail0
 
 { :Bullet, :BulletOne }

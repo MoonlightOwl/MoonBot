@@ -49,18 +49,18 @@ do
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
-    __init = function(self, world, x, y, tex)
+    __init = function(self, assets, world, x, y)
+      self.tex = assets.tex.robot
+      self.height, self.width = self.tex:getDimensions()
       self.initialX = x
       self.initialY = y
       self.body = physics.newBody(world, x, y, "dynamic")
       self.body:setLinearDamping(1.0)
-      self.height, self.width = tex:getDimensions()
       self.shape = physics.newCircleShape(self.width / 2 + 2)
       self.fixture = physics.newFixture(self.body, self.shape)
       self.fixture:setFriction(1.0)
       self.fixture:setGroupIndex(self.__class.PH_GROUP)
       self.angle = 0.0
-      self.tex = tex
     end,
     __base = _base_0,
     __name = "Robot"

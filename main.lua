@@ -10,6 +10,8 @@ do
   local _obj_0 = math
   cos, floor, min, pi, random, sin, sqrt = _obj_0.cos, _obj_0.floor, _obj_0.min, _obj_0.pi, _obj_0.random, _obj_0.sin, _obj_0.sqrt
 end
+local Assets
+Assets = require('assets').Assets
 local Blur
 Blur = require('shader').Blur
 local Splash
@@ -92,50 +94,24 @@ love.load = function()
   GRAVITY = 50
   math.randomseed(os.time())
   window.setTitle("MoonBot!  " .. tostring(VERSION))
-  tex = {
-    back = graphics.newImage('images/back.png'),
-    moon = graphics.newImage('images/moon.png'),
-    box = graphics.newImage('images/box.png'),
-    robot = graphics.newImage('images/robot.png'),
-    splash = graphics.newImage('images/splash.png'),
-    cloud = graphics.newImage('images/cloud.png'),
-    bullet = {
-      body = {
-        graphics.newImage('images/bullet0.png')
-      },
-      trail = {
-        graphics.newImage('images/trail0.png')
-      },
-      sparkle = {
-        graphics.newImage('images/sparkle0.png')
-      }
-    }
-  }
+  assets = Assets()
   back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
-  BulletOne.damage = 1
-  BulletOne.texture = tex.bullet.body[1]
-  BulletOne.trail = tex.bullet.trail[1]
-  BulletOne.sparkle = tex.bullet.sparkle[1]
-  font = {
-    basic = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 28),
-    splash = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 66)
-  }
   splash = {
-    go = Splash("ENTER", {
+    go = Splash(assets, "ENTER", {
       255,
       215,
       71
-    }, tex.splash, font.splash),
-    gameover = Splash("CONTAMINATED", {
+    }),
+    gameover = Splash(assets, "CONTAMINATED", {
       255,
       71,
       71
-    }, tex.splash, font.splash),
-    pause = Splash("PAUSE", {
+    }),
+    pause = Splash(assets, "PAUSE", {
       255,
       215,
       71
-    }, tex.splash, font.splash)
+    })
   }
   shader = {
     blur = Blur()
@@ -143,8 +119,8 @@ love.load = function()
   physics.setMeter(64)
   world = physics.newWorld(0, 0, true)
   objects = { }
-  objects.moon = Moon(world, WIDTH / 2, HEIGTH / 2, tex.moon)
-  objects.robot = Robot(world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30, tex.robot)
+  objects.moon = Moon(assets, world, WIDTH / 2, HEIGTH / 2)
+  objects.robot = Robot(assets, world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30)
   objects.garbage = { }
   objects.bullets = { }
   explosions = { }
@@ -162,7 +138,7 @@ love.update = function(dt)
     if random(1, state.rate) == 1 then
       local angle = randomFloat(0, pi * 2)
       local x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGTH / 2 + sin(angle) * (WIDTH + 100)
-      local garbage = Garbage(world, x, y, tex.box, random(0, pi * 2))
+      local garbage = Garbage(assets, world, x, y, random(0, pi * 2))
       garbage.body:setLinearVelocity(random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2))
       insert(objects.garbage, garbage)
     end
@@ -178,7 +154,7 @@ love.update = function(dt)
         if coll:isTouching() then
           local a, b = coll:getFixtures()
           if a:getGroupIndex() ~= Robot.PH_GROUP and b:getGroupIndex() ~= Robot.PH_GROUP then
-            local explosion = Explosion(bullet:getX(), bullet:getY(), 1.0, tex.cloud)
+            local explosion = Explosion(assets, bullet:getX(), bullet:getY(), 1.0)
             insert(explosions, explosion)
             bullet:makeDead()
             break
@@ -250,7 +226,7 @@ love.mousepressed = function(x, y, button, istouch)
     local rx, ry = objects.robot:getX(), objects.robot:getY()
     local dx, dy = x - rx, y - ry
     local len = sqrt(dx * dx + dy * dy)
-    local bullet = BulletOne(world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
+    local bullet = BulletOne(assets, world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
     return insert(objects.bullets, bullet)
   end
 end
@@ -278,18 +254,18 @@ renderWorld = function()
 end
 love.draw = function()
   graphics.setColor(255, 255, 255)
-  graphics.draw(tex.back, back, 0, 0)
+  graphics.draw(assets.tex.back, back, 0, 0)
   if state.stage ~= GAME then
     shader.blur:draw(renderWorld)
   else
     renderWorld()
   end
   graphics.setColor(255, 255, 255)
-  graphics.setFont(font.basic)
+  graphics.setFont(assets.font.basic)
   graphics.print(os.date("%M:%S", state.time), 20, 20)
   local percent = min(state.contam, 100)
   graphics.setColor(227 + percent * 0.28, 255 - percent * 1.34, 121)
-  graphics.print(tostring(floor(state.contam)) .. " %", WIDTH - font.basic:getWidth(tostring(floor(state.contam)) .. " %") - 20, 20)
+  graphics.print(tostring(floor(state.contam)) .. " %", WIDTH - assets.font.basic:getWidth(tostring(floor(state.contam)) .. " %") - 20, 20)
   local _exp_0 = state.stage
   if START == _exp_0 then
     return splash.go:draw()

@@ -44,10 +44,9 @@ do
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
-    __init = function(self, world, x, y, sx, sy, damage, texture, trail, sparkle)
+    __init = function(self, world, x, y, sx, sy, damage, texture, trail)
       self.texture = texture
       self.trail = trail
-      self.sparkle = sparkle
       local _
       self.size, _ = self.texture:getDimensions()
       self.time = self.__class.LIFE_TIME
@@ -90,8 +89,8 @@ do
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
-    __init = function(self, world, x, y, sx, sy)
-      return _class_0.__parent.__init(self, world, x, y, sx, sy, self.__class.damage, self.__class.texture, self.__class.trail, self.__class.sparkle)
+    __init = function(self, assets, world, x, y, sx, sy)
+      return _class_0.__parent.__init(self, world, x, y, sx, sy, 1, assets.tex.bullet0, assets.tex.trail0)
     end,
     __base = _base_0,
     __name = "BulletOne",
@@ -115,11 +114,6 @@ do
     end
   })
   _base_0.__class = _class_0
-  local self = _class_0
-  self.texture = nil
-  self.trail = nil
-  self.sparkle = nil
-  self.damage = 0
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end
