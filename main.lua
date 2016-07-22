@@ -98,6 +98,7 @@ love.load = function()
     box = graphics.newImage('images/box.png'),
     robot = graphics.newImage('images/robot.png'),
     splash = graphics.newImage('images/splash.png'),
+    cloud = graphics.newImage('images/cloud.png'),
     bullet = {
       body = {
         graphics.newImage('images/bullet0.png')
@@ -177,7 +178,7 @@ love.update = function(dt)
         if coll:isTouching() then
           local a, b = coll:getFixtures()
           if a:getGroupIndex() ~= Robot.PH_GROUP and b:getGroupIndex() ~= Robot.PH_GROUP then
-            local explosion = Explosion(bullet:explosion(), bullet:getX(), bullet:getY(), 1.0)
+            local explosion = Explosion(bullet:getX(), bullet:getY(), 1.0, tex.cloud)
             insert(explosions, explosion)
             bullet:makeDead()
             break
@@ -267,11 +268,13 @@ renderWorld = function()
     local bullet = _list_1[_index_0]
     bullet:draw()
   end
+  graphics.setBlendMode("add")
   local _list_2 = explosions
   for _index_0 = 1, #_list_2 do
     local explosion = _list_2[_index_0]
     explosion:draw()
   end
+  return graphics.setBlendMode("alpha")
 end
 love.draw = function()
   graphics.setColor(255, 255, 255)

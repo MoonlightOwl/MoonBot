@@ -9,18 +9,6 @@ local Bullet
 do
   local _class_0
   local _base_0 = {
-    explosion = function(self)
-      local ps = graphics.newParticleSystem(self.sparkle, 32)
-      ps:setParticleLifetime(0.1, 0.5)
-      ps:setEmissionRate(60)
-      ps:setSizeVariation(1)
-      ps:setSizes(1.0, 2.0, 0.5, 0.2)
-      ps:setColors(255, 255, 100, 255, 255, 255, 255, 255, 255, 255, 255, 0)
-      ps:setLinearAcceleration(-60, -60, 60, 60)
-      ps:setSpin(-pi, pi)
-      ps:setSpinVariation(0.5)
-      return ps
-    end,
     update = function(self, dt)
       self.time = self.time - dt
       local sx, sy = self.body:getLinearVelocity()
@@ -44,7 +32,9 @@ do
       return self.body:getPosition()
     end,
     draw = function(self)
+      graphics.setBlendMode("add")
       graphics.draw(self.ps_bullet, self.body:getX(), self.body:getY())
+      graphics.setBlendMode("alpha")
       return graphics.draw(self.texture, self.body:getX(), self.body:getY(), 0, 1, 1, self.size / 2, self.size / 2)
     end,
     destroy = function(self)

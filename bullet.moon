@@ -29,18 +29,6 @@ class Bullet
     @ps_bullet\setSizes 1.0, 1.1, 1.0, 0.5, 0.2
     @ps_bullet\setColors 255, 255, 255, 255,  255, 255, 255, 0 -- fade to transparency
 
-  explosion: =>
-    ps = graphics.newParticleSystem @sparkle, 32
-    ps\setParticleLifetime 0.1, 0.5
-    ps\setEmissionRate 60
-    ps\setSizeVariation 1
-    ps\setSizes 1.0, 2.0, 0.5, 0.2
-    ps\setColors 255, 255, 100, 255,  255, 255, 255, 255,  255, 255, 255, 0
-    ps\setLinearAcceleration -60, -60, 60, 60
-    ps\setSpin -pi, pi
-    ps\setSpinVariation 0.5
-    ps
-
   update: (dt) =>
     @time -= dt
 
@@ -57,7 +45,9 @@ class Bullet
   getPosition: => @body\getPosition!
 
   draw: =>
+    graphics.setBlendMode "add"
     graphics.draw @ps_bullet, @body\getX!, @body\getY!
+    graphics.setBlendMode "alpha"
     graphics.draw @texture, @body\getX!, @body\getY!, 0, 1, 1, @size / 2, @size / 2
 
   destroy: =>

@@ -87,6 +87,7 @@ love.load = ->
     box: graphics.newImage 'images/box.png'
     robot: graphics.newImage 'images/robot.png'
     splash: graphics.newImage 'images/splash.png'
+    cloud: graphics.newImage 'images/cloud.png'
     bullet: {
       body: {
         graphics.newImage 'images/bullet0.png'
@@ -167,7 +168,7 @@ love.update = (dt) ->
         if coll\isTouching!
           a, b = coll\getFixtures!
           if a\getGroupIndex! ~= Robot.PH_GROUP and b\getGroupIndex! ~= Robot.PH_GROUP
-            explosion = Explosion bullet\explosion!, bullet\getX!, bullet\getY!, 1.0
+            explosion = Explosion bullet\getX!, bullet\getY!, 1.0, tex.cloud
             insert explosions, explosion
             bullet\makeDead!
             break
@@ -254,8 +255,10 @@ renderWorld = ->
     bullet\draw!
 
   -- Explosions
+  graphics.setBlendMode "add"
   for explosion in *explosions
     explosion\draw!
+  graphics.setBlendMode "alpha"
 
 love.draw = ->
   -- Background
