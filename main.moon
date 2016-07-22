@@ -201,12 +201,13 @@ love.keypressed = (key, scancode, isrepeat) ->
 love.mousepressed = (x, y, button, istouch) ->
   -- Fire!
   if button == 1
-    rx, ry = objects.robot\getX!, objects.robot\getY!
-    dx, dy = x - rx, y - ry
-    len = sqrt dx*dx + dy*dy
-    bullet = BulletOne assets, world, 
-      rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2
-    insert objects.bullets, bullet
+    if state.stage == GAME
+      rx, ry = objects.robot\getX!, objects.robot\getY!
+      dx, dy = x - rx, y - ry
+      len = sqrt dx*dx + dy*dy
+      bullet = BulletOne assets, world, 
+        rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2
+      insert objects.bullets, bullet
 
 
 

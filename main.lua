@@ -223,11 +223,13 @@ love.keypressed = function(key, scancode, isrepeat)
 end
 love.mousepressed = function(x, y, button, istouch)
   if button == 1 then
-    local rx, ry = objects.robot:getX(), objects.robot:getY()
-    local dx, dy = x - rx, y - ry
-    local len = sqrt(dx * dx + dy * dy)
-    local bullet = BulletOne(assets, world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
-    return insert(objects.bullets, bullet)
+    if state.stage == GAME then
+      local rx, ry = objects.robot:getX(), objects.robot:getY()
+      local dx, dy = x - rx, y - ry
+      local len = sqrt(dx * dx + dy * dy)
+      local bullet = BulletOne(assets, world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
+      return insert(objects.bullets, bullet)
+    end
   end
 end
 local renderWorld

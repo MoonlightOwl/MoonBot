@@ -2,7 +2,7 @@ import graphics, physics from love
 import pi from math
 
 class Bullet
-  @LIFE_TIME: 5,
+  @LIFE_TIME: 10,
   @PH_GROUP: -1,
 
   new: (world, x, y, sx, sy, damage, texture, trail) =>

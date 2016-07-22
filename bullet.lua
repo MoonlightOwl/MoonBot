@@ -77,7 +77,7 @@ do
   })
   _base_0.__class = _class_0
   local self = _class_0
-  self.LIFE_TIME = 5
+  self.LIFE_TIME = 10
   self.PH_GROUP = -1
   Bullet = _class_0
 end
