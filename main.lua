@@ -182,13 +182,16 @@ love.update = function(dt)
     local explosions = alive_explosions
     objects.robot:update(dt, objects.moon)
     if keyboard.isScancodeDown('a', 'left') then
-      objects.robot:moveLeft(80)
+      objects.robot:left(80)
     end
     if keyboard.isScancodeDown('d', 'right') then
-      objects.robot:moveRight(80)
+      objects.robot:right(80)
     end
     if keyboard.isScancodeDown('w', 'up') then
-      objects.robot:jump(80)
+      objects.robot:up(110)
+    end
+    if keyboard.isScancodeDown('s', 'down') then
+      objects.robot:down(90)
     end
     state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
     state.contam = state.contam + ((state.target_contam - state.contam) * dt)

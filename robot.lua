@@ -21,14 +21,17 @@ do
     getY = function(self)
       return self.body:getY()
     end,
-    moveLeft = function(self, force)
+    left = function(self, force)
       return self:thrust(force, self.angle - pi)
     end,
-    moveRight = function(self, force)
+    right = function(self, force)
       return self:thrust(force, self.angle)
     end,
-    jump = function(self, force)
+    up = function(self, force)
       return self:thrust(force, self.angle - pi / 2)
+    end,
+    down = function(self, force)
+      return self:thrust(force, self.angle + pi / 2)
     end,
     thrust = function(self, force, angle)
       return self.body:applyForce(cos(angle) * force, sin(angle) * force)

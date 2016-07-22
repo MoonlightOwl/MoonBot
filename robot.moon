@@ -21,9 +21,10 @@ class Robot
   getX: => @body\getX!
   getY: => @body\getY!
 
-  moveLeft: (force) => @thrust force, @angle - pi
-  moveRight: (force) => @thrust force, @angle
-  jump: (force) => @thrust force, @angle - pi/2
+  left: (force) => @thrust force, @angle - pi
+  right: (force) => @thrust force, @angle
+  up: (force) => @thrust force, @angle - pi/2
+  down: (force) => @thrust force, @angle + pi/2
 
   thrust: (force, angle) =>
     @body\applyForce cos(angle) * force, sin(angle) * force

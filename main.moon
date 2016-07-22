@@ -160,11 +160,13 @@ love.update = (dt) ->
     -- Update player
     objects.robot\update dt, objects.moon
     if keyboard.isScancodeDown 'a', 'left'
-      objects.robot\moveLeft 80
+      objects.robot\left 80
     if keyboard.isScancodeDown 'd', 'right'
-      objects.robot\moveRight 80
+      objects.robot\right 80
     if keyboard.isScancodeDown 'w', 'up'
-      objects.robot\jump 80
+      objects.robot\up 110
+    if keyboard.isScancodeDown 's', 'down'
+      objects.robot\down 90
 
     -- Calculate contamination level
     state.target_contam = #objects.moon.body\getContactList! * DIFFICULTY
