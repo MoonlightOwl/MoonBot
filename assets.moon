@@ -6,7 +6,6 @@ class Assets
     @tex = setmetatable {}, {
       __index: (tex, name) ->
         if not Assets.images[name]
-          print "!!! New texture: " .. name
           Assets.images[name] = graphics.newImage "images/#{name}.png"
         Assets.images[name]
     }

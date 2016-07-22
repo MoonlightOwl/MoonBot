@@ -55,7 +55,9 @@ class Bullet
 
 
 class BulletOne extends Bullet
-  new: (assets, world, x, y, sx, sy) =>
-    super world, x, y, sx, sy, 1, assets.tex.bullet0, assets.tex.trail0
+  @force: 500
+  @damage: 1
+  new: (assets, world, x, y, dx, dy) =>
+    super world, x, y, dx * @@force, dy * @@force, @@damage, assets.tex.bullet0, assets.tex.trail0
 
 { :Bullet, :BulletOne }

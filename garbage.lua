@@ -7,14 +7,31 @@ local Garbage
 do
   local _class_0
   local _base_0 = {
+    hit = function(self, damage)
+      self.life = self.life - damage
+    end,
+    isDamaged = function(self)
+      return self.life < self.__class.MAX_LIFE / 2
+    end,
+    isDestroyed = function(self)
+      return self.life <= 0
+    end,
     draw = function(self)
-      return graphics.draw(self.texture, self.body:getX(), self.body:getY(), self.body:getAngle(), 1, 1, self.width / 2, self.height / 2)
+      return graphics.draw(((function()
+        if self:isDamaged() then
+          return self.texture_damaged
+        else
+          return self.texture
+        end
+      end)()), self.body:getX(), self.body:getY(), self.body:getAngle(), 1, 1, self.width / 2, self.height / 2)
     end
   }
   _base_0.__index = _base_0
   _class_0 = setmetatable({
     __init = function(self, assets, world, x, y, angle)
+      self.life = self.__class.MAX_LIFE
       self.texture = assets.tex.box
+      self.texture_damaged = assets.tex["box-damaged"]
       self.width, self.height = self.texture:getDimensions()
       self.body = physics.newBody(world, x, y, "dynamic")
       self.body:setAngle(angle)
@@ -37,6 +54,7 @@ do
   _base_0.__class = _class_0
   local self = _class_0
   self.PH_GROUP = 3
+  self.MAX_LIFE = 3
   Garbage = _class_0
 end
 return {

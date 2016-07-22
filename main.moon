@@ -132,7 +132,6 @@ love.update = (dt) ->
     alive_bullets = {}
     for bullet in *objects.bullets
       bullet\update dt
-      gravitate bullet, objects.moon, GRAVITY * 0.2
       for coll in *bullet.body\getContactList!
         if coll\isTouching!
           a, b = coll\getFixtures!
@@ -207,8 +206,10 @@ love.mousepressed = (x, y, button, istouch) ->
       rx, ry = objects.robot\getX!, objects.robot\getY!
       dx, dy = x - rx, y - ry
       len = sqrt dx*dx + dy*dy
+      dx /= len
+      dy /= len
       bullet = BulletOne assets, world, 
-        rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2
+        rx + dx * objects.robot.width, ry + dy * objects.robot.height, dx, dy
       insert objects.bullets, bullet
 
 

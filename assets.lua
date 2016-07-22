@@ -10,7 +10,6 @@ do
       self.tex = setmetatable({ }, {
         __index = function(tex, name)
           if not Assets.images[name] then
-            print("!!! New texture: " .. name)
             Assets.images[name] = graphics.newImage("images/" .. tostring(name) .. ".png")
           end
           return Assets.images[name]

@@ -89,8 +89,8 @@ do
   _base_0.__index = _base_0
   setmetatable(_base_0, _parent_0.__base)
   _class_0 = setmetatable({
-    __init = function(self, assets, world, x, y, sx, sy)
-      return _class_0.__parent.__init(self, world, x, y, sx, sy, 1, assets.tex.bullet0, assets.tex.trail0)
+    __init = function(self, assets, world, x, y, dx, dy)
+      return _class_0.__parent.__init(self, world, x, y, dx * self.__class.force, dy * self.__class.force, self.__class.damage, assets.tex.bullet0, assets.tex.trail0)
     end,
     __base = _base_0,
     __name = "BulletOne",
@@ -114,6 +114,9 @@ do
     end
   })
   _base_0.__class = _class_0
+  local self = _class_0
+  self.force = 500
+  self.damage = 1
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

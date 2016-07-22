@@ -147,7 +147,6 @@ love.update = function(dt)
     for _index_0 = 1, #_list_1 do
       local bullet = _list_1[_index_0]
       bullet:update(dt)
-      gravitate(bullet, objects.moon, GRAVITY * 0.2)
       local _list_2 = bullet.body:getContactList()
       for _index_1 = 1, #_list_2 do
         local coll = _list_2[_index_1]
@@ -230,7 +229,9 @@ love.mousepressed = function(x, y, button, istouch)
       local rx, ry = objects.robot:getX(), objects.robot:getY()
       local dx, dy = x - rx, y - ry
       local len = sqrt(dx * dx + dy * dy)
-      local bullet = BulletOne(assets, world, rx + dx / len * objects.robot.width, ry + dy / len * objects.robot.height, dx * 2, dy * 2)
+      dx = dx / len
+      dy = dy / len
+      local bullet = BulletOne(assets, world, rx + dx * objects.robot.width, ry + dy * objects.robot.height, dx, dy)
       return insert(objects.bullets, bullet)
     end
   end
