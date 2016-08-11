@@ -43,10 +43,10 @@ do
     draw = function(self)
       if self.visible then
         graphics.setColor(255, 255, 255)
-        graphics.draw(self.back, WIDTH / 2, HEIGTH / 2, 0, 1, 1, self.off.x, self.off.y)
+        graphics.draw(self.back, WIDTH / 2, HEIGHT / 2, 0, 1, 1, self.off.x, self.off.y)
         graphics.setColor(self.color)
         graphics.setFont(self.font)
-        return graphics.print(self.text, WIDTH / 2 - self.font:getWidth(self.text) / 2, HEIGTH / 2 - self.font:getHeight() / 2)
+        return graphics.print(self.text, WIDTH / 2 - self.font:getWidth(self.text) / 2, HEIGHT / 2 - self.font:getHeight() / 2)
       end
     end
   }

@@ -82,7 +82,7 @@ love.load = ->
   -- Variables & game contants
   export state = {}   -- game state table
 
-  export WIDTH, HEIGTH = window.getMode!
+  export WIDTH, HEIGHT = window.getMode!
   export GRAVITY = 50  -- moon gravity
 
   math.randomseed os.time!
@@ -90,7 +90,7 @@ love.load = ->
 
   -- Load graphics
   export assets = Assets!
-  export back = graphics.newQuad 0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH
+  export back = graphics.newQuad 0, 0, WIDTH, HEIGHT, WIDTH, HEIGHT
   export splash = {
     go: Splash assets, "ENTER", { 255, 215, 71 }
     gameover: Splash assets, "CONTAMINATED", { 255, 71, 71 }
@@ -104,8 +104,8 @@ love.load = ->
   physics.setMeter 64
   export world = physics.newWorld 0, 0, true
   export objects = {}
-  objects.moon = Moon assets, world, WIDTH / 2, HEIGTH / 2
-  objects.robot = Robot assets, world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30
+  objects.moon = Moon assets, world, WIDTH / 2, HEIGHT / 2
+  objects.robot = Robot assets, world, WIDTH / 2, HEIGHT / 2 - objects.moon.radius - 30
   objects.garbage = {}
   objects.bullets = {}
 
@@ -144,7 +144,7 @@ love.update = (dt) ->
     -- Spawn new garbage
     if random(1, state.rate) == 1
       angle = randomFloat 0, pi * 2
-      x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGTH / 2 + sin(angle) * (WIDTH + 100)
+      x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGHT / 2 + sin(angle) * (WIDTH + 100)
       garbage = Garbage assets, world, x, y, random(0, pi * 2)
       garbage.body\setLinearVelocity random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2)
       insert objects.garbage, garbage
@@ -264,6 +264,18 @@ love.draw = ->
   -- UI
   graphics.setColor 255, 255, 255
   graphics.setFont assets.font.basic
+
+  if state.stage == GAME
+    graphics.print state.weapon.name, 20, HEIGHT - 50
+    bar = if state.weapon\isReloading!
+            "[" .. "."\rep(state.weapon\magazineSize!) .. "]"
+          else
+            "[" ..
+            "-"\rep(state.weapon\currentMagazine!) ..
+            " "\rep(state.weapon\magazineSize! - state.weapon\currentMagazine!) ..
+            "]"
+    graphics.print bar, WIDTH - assets.font.basic\getWidth(bar) - 20, HEIGHT - 50
+
   graphics.print os.date("%M:%S", state.time), 20, 20
   
   percent = min state.contam, 100

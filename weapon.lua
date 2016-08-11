@@ -12,6 +12,15 @@ do
     hasAmmo = function(self)
       return self._ammo == nil or self._ammo > 0
     end,
+    magazineSize = function(self)
+      return self.magazine
+    end,
+    currentMagazine = function(self)
+      return self._magazine
+    end,
+    isReloading = function(self)
+      return not self._ready and self._magazine <= 0
+    end,
     trigger = function(self, rx, ry, mx, my)
       self._trigger = true
       self._rx = rx
@@ -86,9 +95,10 @@ do
   local _parent_0 = Weapon
   local _base_0 = {
     initParams = function(self)
+      self.name = "Plasma One"
+      self.magazine = 5
       self.trigger_time = 0.06
       self.reload_time = 0.5
-      self.magazine = 5
     end,
     fire = function(self)
       local dx, dy = self._mx - self._rx, self._my - self._ry

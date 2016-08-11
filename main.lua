@@ -90,12 +90,12 @@ gravitate = function(object, moon, gravity)
 end
 love.load = function()
   state = { }
-  WIDTH, HEIGTH = window.getMode()
+  WIDTH, HEIGHT = window.getMode()
   GRAVITY = 50
   math.randomseed(os.time())
   window.setTitle("MoonBot!  " .. tostring(VERSION))
   assets = Assets()
-  back = graphics.newQuad(0, 0, WIDTH, HEIGTH, WIDTH, HEIGTH)
+  back = graphics.newQuad(0, 0, WIDTH, HEIGHT, WIDTH, HEIGHT)
   splash = {
     go = Splash(assets, "ENTER", {
       255,
@@ -119,8 +119,8 @@ love.load = function()
   physics.setMeter(64)
   world = physics.newWorld(0, 0, true)
   objects = { }
-  objects.moon = Moon(assets, world, WIDTH / 2, HEIGTH / 2)
-  objects.robot = Robot(assets, world, WIDTH / 2, HEIGTH / 2 - objects.moon.radius - 30)
+  objects.moon = Moon(assets, world, WIDTH / 2, HEIGHT / 2)
+  objects.robot = Robot(assets, world, WIDTH / 2, HEIGHT / 2 - objects.moon.radius - 30)
   objects.garbage = { }
   objects.bullets = { }
   explosions = { }
@@ -153,7 +153,7 @@ love.update = function(dt)
     gravitate(objects.robot, objects.moon, GRAVITY * 10)
     if random(1, state.rate) == 1 then
       local angle = randomFloat(0, pi * 2)
-      local x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGTH / 2 + sin(angle) * (WIDTH + 100)
+      local x, y = WIDTH / 2 + cos(angle) * (WIDTH + 100), HEIGHT / 2 + sin(angle) * (WIDTH + 100)
       local garbage = Garbage(assets, world, x, y, random(0, pi * 2))
       garbage.body:setLinearVelocity(random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2))
       insert(objects.garbage, garbage)
@@ -284,6 +284,16 @@ love.draw = function()
   end
   graphics.setColor(255, 255, 255)
   graphics.setFont(assets.font.basic)
+  if state.stage == GAME then
+    graphics.print(state.weapon.name, 20, HEIGHT - 50)
+    local bar
+    if state.weapon:isReloading() then
+      bar = "[" .. ("."):rep(state.weapon:magazineSize()) .. "]"
+    else
+      bar = "[" .. ("-"):rep(state.weapon:currentMagazine()) .. (" "):rep(state.weapon:magazineSize() - state.weapon:currentMagazine()) .. "]"
+    end
+    graphics.print(bar, WIDTH - assets.font.basic:getWidth(bar) - 20, HEIGHT - 50)
+  end
   graphics.print(os.date("%M:%S", state.time), 20, 20)
   local percent = min(state.contam, 100)
   graphics.setColor(227 + percent * 0.28, 255 - percent * 1.34, 121)

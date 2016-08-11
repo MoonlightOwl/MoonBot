@@ -17,6 +17,15 @@ class Weapon
   hasAmmo: =>
     @_ammo == nil or @_ammo > 0
 
+  magazineSize: =>
+    @magazine
+
+  currentMagazine: =>
+    @_magazine
+
+  isReloading: =>
+    not @_ready and @_magazine <= 0
+
   trigger: (rx, ry, mx, my) =>
     @_trigger = true
     @_rx = rx
@@ -55,9 +64,10 @@ class Weapon
 
 class PlasmaOne extends Weapon
   initParams: =>
+    @name = "Plasma One"
+    @magazine = 5
     @trigger_time = 0.06
     @reload_time = 0.5
-    @magazine = 5
 
   fire: =>
     dx, dy = @_mx - @_rx, @_my - @_ry
