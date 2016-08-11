@@ -1,9 +1,9 @@
 local insert
 insert = table.insert
-local event, graphics, keyboard, physics, window
+local event, graphics, keyboard, mouse, physics, window
 do
   local _obj_0 = love
-  event, graphics, keyboard, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.keyboard, _obj_0.physics, _obj_0.window
+  event, graphics, keyboard, mouse, physics, window = _obj_0.event, _obj_0.graphics, _obj_0.keyboard, _obj_0.mouse, _obj_0.physics, _obj_0.window
 end
 local cos, floor, min, pi, random, sin, sqrt
 do
@@ -22,16 +22,15 @@ local Garbage
 Garbage = require('garbage').Garbage
 local Robot
 Robot = require('robot').Robot
-local Bullet, BulletOne
-do
-  local _obj_0 = require('bullet')
-  Bullet, BulletOne = _obj_0.Bullet, _obj_0.BulletOne
-end
+local BulletOne
+BulletOne = require('bullet').BulletOne
 local Explosion
 Explosion = require('ps').Explosion
+local PlasmaOne
+PlasmaOne = require('weapon').PlasmaOne
 local VERSION = 0.1
 local DIFFICULTY = 5
-local START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
+local MAINMENU, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
 local nope
 nope = function()
   return 0
@@ -60,7 +59,7 @@ local setStage
 setStage = function(state, stage)
   state.stage = stage
   local _exp_0 = stage
-  if START == _exp_0 then
+  if MAINMENU == _exp_0 then
     state.time = 0
     state.contam = 0
     state.target_contam = 0
@@ -70,6 +69,7 @@ setStage = function(state, stage)
     state.contam = 0
     state.target_contam = 0
     cleanPhysicsUp()
+    state.weapon = PlasmaOne(assets, world, objects.robot.width)
     state.stage = GAME
   elseif GAME == _exp_0 then
     nope()
@@ -124,7 +124,7 @@ love.load = function()
   objects.garbage = { }
   objects.bullets = { }
   explosions = { }
-  return setStage(state, START)
+  return setStage(state, MAINMENU)
 end
 local hitABox
 hitABox = function(fixture, damage)
@@ -158,10 +158,14 @@ love.update = function(dt)
       garbage.body:setLinearVelocity(random(-GRAVITY * 2, GRAVITY * 2), random(-GRAVITY * 2, GRAVITY * 2))
       insert(objects.garbage, garbage)
     end
+    local bullet = state.weapon:update(dt)
+    if bullet ~= nil then
+      insert(objects.bullets, bullet)
+    end
     local alive_bullets = { }
     local _list_1 = objects.bullets
     for _index_0 = 1, #_list_1 do
-      local bullet = _list_1[_index_0]
+      bullet = _list_1[_index_0]
       bullet:update(dt)
       local _list_2 = bullet.body:getContactList()
       for _index_1 = 1, #_list_2 do
@@ -210,6 +214,9 @@ love.update = function(dt)
     if keyboard.isScancodeDown('s', 'down') then
       objects.robot:down(90)
     end
+    if mouse.isDown(1) then
+      state.weapon:trigger(objects.robot:getX(), objects.robot:getY(), mouse.getX(), mouse.getY())
+    end
     state.target_contam = #objects.moon.body:getContactList() * DIFFICULTY
     state.contam = state.contam + ((state.target_contam - state.contam) * dt)
     state.time = state.time + dt
@@ -220,16 +227,17 @@ love.update = function(dt)
 end
 love.keypressed = function(key, scancode, isrepeat)
   if state.stage == GAME then
-    local _exp_0 = key
-    if "escape" == _exp_0 then
-      return setStage(state, START)
-    elseif "p" == _exp_0 then
+    if key == "escape" or key == "p" then
       return setStage(state, PAUSE)
     end
   else
     if state.stage == PAUSE then
       if key == "p" or key == "return" then
         return setStage(state, GAME)
+      else
+        if key == "escape" then
+          return setStage(state, MAINMENU)
+        end
       end
     else
       local _exp_0 = key
@@ -242,17 +250,7 @@ love.keypressed = function(key, scancode, isrepeat)
   end
 end
 love.mousepressed = function(x, y, button, istouch)
-  if button == 1 then
-    if state.stage == GAME then
-      local rx, ry = objects.robot:getX(), objects.robot:getY()
-      local dx, dy = x - rx, y - ry
-      local len = sqrt(dx * dx + dy * dy)
-      dx = dx / len
-      dy = dy / len
-      local bullet = BulletOne(assets, world, rx + dx * objects.robot.width, ry + dy * objects.robot.height, dx, dy)
-      return insert(objects.bullets, bullet)
-    end
-  end
+  return nope()
 end
 local renderWorld
 renderWorld = function()
@@ -291,7 +289,7 @@ love.draw = function()
   graphics.setColor(227 + percent * 0.28, 255 - percent * 1.34, 121)
   graphics.print(tostring(floor(state.contam)) .. " %", WIDTH - assets.font.basic:getWidth(tostring(floor(state.contam)) .. " %") - 20, 20)
   local _exp_0 = state.stage
-  if START == _exp_0 then
+  if MAINMENU == _exp_0 then
     return splash.go:draw()
   elseif GAMEOVER == _exp_0 then
     return splash.gameover:draw()

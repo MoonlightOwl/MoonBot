@@ -19,6 +19,7 @@ do
         basic = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 28),
         splash = graphics.newFont('fonts/Anonymous Pro Minus.ttf', 66)
       }
+      self.sound = { }
     end,
     __base = _base_0,
     __name = "Assets"

@@ -6,7 +6,7 @@
 --
 
 import insert from table
-import event, graphics, keyboard, physics, window from love
+import event, graphics, keyboard, mouse, physics, window from love
 import cos, floor, min, pi, random, sin, sqrt from math
 import Assets from require 'assets'
 import Blur from require 'shader'
@@ -14,19 +14,23 @@ import Splash from require 'ui'
 import Moon from require 'moon'
 import Garbage from require 'garbage'
 import Robot from require 'robot'
-import Bullet, BulletOne from require 'bullet'
+import BulletOne from require 'bullet'
 import Explosion from require 'ps'
+import PlasmaOne from require 'weapon'
 
 VERSION = 0.1
 DIFFICULTY = 5
-START, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
+MAINMENU, NEWGAME, GAME, PAUSE, GAMEOVER = 1, 2, 3, 4, 5
+
 
 -- Game processing -------------------------------------------------------------
 
 nope = -> 0
 
+
 randomFloat = (lower, greater) ->
     lower + random! * (greater - lower)
+
 
 cleanPhysicsUp = ->
   -- Remove garbage
@@ -38,10 +42,11 @@ cleanPhysicsUp = ->
   -- Reset robot
   objects.robot\reset!
 
+
 setStage = (state, stage) ->
   state.stage = stage
   switch stage
-    when START
+    when MAINMENU
       state.time = 0
       state.contam = 0
       state.target_contam = 0
@@ -51,6 +56,7 @@ setStage = (state, stage) ->
       state.contam = 0
       state.target_contam = 0
       cleanPhysicsUp!
+      state.weapon = PlasmaOne assets, world, objects.robot.width
       state.stage = GAME
     when GAME
       nope!
@@ -67,6 +73,7 @@ gravitate = (object, moon, gravity) ->
   len = math.sqrt dx * dx + dy * dy
   fx, fy = dx / len * GRAVITY, dy / len * GRAVITY
   object.body\applyForce fx, fy
+
 
 
 -- Love cycle ------------------------------------------------------------------
@@ -106,7 +113,7 @@ love.load = ->
   export explosions = {}
 
   -- Let's go!
-  setStage state, START
+  setStage state, MAINMENU
 
 
 hitABox = (fixture, damage) ->
@@ -115,6 +122,7 @@ hitABox = (fixture, damage) ->
     garbage\hit damage
     true
   false
+
 
 love.update = (dt) ->
   if state.stage == GAME
@@ -142,6 +150,9 @@ love.update = (dt) ->
       insert objects.garbage, garbage
 
     -- Update bullets
+    bullet = state.weapon\update dt
+    if bullet ~= nil then insert objects.bullets, bullet
+
     alive_bullets = {}
     for bullet in *objects.bullets
       bullet\update dt
@@ -182,6 +193,9 @@ love.update = (dt) ->
     if keyboard.isScancodeDown 's', 'down'
       objects.robot\down 90
 
+    if mouse.isDown 1
+      state.weapon\trigger objects.robot\getX!, objects.robot\getY!, mouse.getX!, mouse.getY!
+
     -- Calculate contamination level
     state.target_contam = #objects.moon.body\getContactList! * DIFFICULTY
     state.contam += (state.target_contam - state.contam) * dt
@@ -197,14 +211,13 @@ love.update = (dt) ->
 
 love.keypressed = (key, scancode, isrepeat) ->
   if state.stage == GAME
-    switch key
-      when "escape"
-        setStage state, START
-      when "p"
-        setStage state, PAUSE
+    if key == "escape" or key == "p"
+      setStage state, PAUSE
   else if state.stage == PAUSE
     if key == "p" or key == "return"
       setStage state, GAME
+    else if key == "escape"
+      setStage state, MAINMENU
   else
     switch key
       when "return"
@@ -215,17 +228,7 @@ love.keypressed = (key, scancode, isrepeat) ->
 
 
 love.mousepressed = (x, y, button, istouch) ->
-  -- Fire!
-  if button == 1
-    if state.stage == GAME
-      rx, ry = objects.robot\getX!, objects.robot\getY!
-      dx, dy = x - rx, y - ry
-      len = sqrt dx*dx + dy*dy
-      dx /= len
-      dy /= len
-      bullet = BulletOne assets, world, 
-        rx + dx * objects.robot.width, ry + dy * objects.robot.height, dx, dy
-      insert objects.bullets, bullet
+  nope!
 
 
 
@@ -248,6 +251,7 @@ renderWorld = ->
     explosion\draw!
   graphics.setBlendMode "alpha"
 
+
 love.draw = ->
   -- Background
   graphics.setColor 255, 255, 255
@@ -268,7 +272,7 @@ love.draw = ->
     WIDTH - assets.font.basic\getWidth("#{floor state.contam} %") - 20, 20
 
   switch state.stage
-    when START
+    when MAINMENU
       splash.go\draw!
     when GAMEOVER
       splash.gameover\draw!
